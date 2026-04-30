@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>UpScale BD</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3a;--accent:#7c5cfc;--accent2:#00e5b0;--text:#e8e8f0;--muted:#6b6b85;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif}
+#app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto}
+.topbar{padding:16px 20px 12px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar h1{font-family:"Syne",sans-serif;font-size:18px;font-weight:800;letter-spacing:-.5px}
+.topbar h1 span{color:var(--accent)}
+.badge{background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.nav-tabs{display:flex;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.tab-btn{flex:1;padding:10px 4px 8px;background:none;border:none;color:var(--muted);font-family:"DM Sans",sans-serif;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s}
+.tab-btn.active{color:var(--accent)}
+.tab-btn svg{width:20px;height:20px}
+.page{display:none}.page.active{display:block}
+.dash-header{padding:20px 20px 0}
+.dash-date{font-family:"Syne",sans-serif;font-size:22px;font-weight:800}
+.dash-sub{font-size:13px;color:var(--muted);margin-bottom:4px}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center}
+.stat .n{font-family:"Syne",sans-serif;font-size:24px;font-weight:800}
+.stat .l{font-size:10px;color:var(--muted);margin-top:3px}
+.s-out .n{color:var(--accent)}.s-on .n{color:var(--yellow)}.s-act .n{color:var(--green)}
+.sec{font-family:"Syne",sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 20px;margin-bottom:10px}
+.rbox{margin:0 20px 16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+.rprev{background:var(--surface2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7;margin-bottom:10px;font-family:monospace;white-space:pre-wrap;border-left:3px solid var(--accent)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:12px;border:none;font-family:"Syne",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;width:100%}
+.btn-p{background:var(--accent);color:#fff}.btn-s{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-g{background:var(--green);color:#fff}.btn-r{background:var(--red);color:#fff}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.sbar{display:flex;gap:8px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+.sbar input{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;padding:10px 14px}
+.sbar input:focus{outline:none;border-color:var(--accent)}
+.frow{display:flex;gap:6px;width:100%}
+.fb{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 8px;cursor:pointer;font-size:11px;flex:1;text-align:center;transition:all .2s;white-space:nowrap}
+.fb.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.fb.red-fb{border-color:rgba(239,68,68,.3);color:var(--red)}
+.fb.red-fb.on{background:var(--red);border-color:var(--red);color:#fff}
+.dbc{font-size:11px;color:var(--muted);padding:8px 20px 2px}
+.clist{padding:8px 16px 16px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;position:relative}
+.cc:active{border-color:var(--accent)}
+.cc.contacted{border-left:3px solid var(--yellow)}
+.cc.onboarding{border-left:3px solid var(--accent)}
+.cc.active-inf{border-left:3px solid var(--green)}
+.cr1{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.cn{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;line-height:1.3;flex:1;padding-right:8px}
+.cs{font-size:11px;font-weight:600;color:var(--accent2);background:rgba(0,229,176,.1);padding:3px 8px;border-radius:20px;white-space:nowrap}
+.cr2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cl{font-size:11px;color:var(--muted)}
+.cco{font-size:10px;padding:2px 7px;border-radius:20px}
+.cco.op{background:rgba(34,197,94,.15);color:var(--green)}
+.cco.cl2{background:rgba(107,107,133,.15);color:var(--muted)}
+.dot{position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--border)}
+.dot.contacted{background:var(--yellow)}.dot.onboarding{background:var(--accent)}.dot.active-inf{background:var(--green)}
+.stag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px}
+.sb{background:rgba(239,68,68,.15);color:var(--red)}
+.sm{background:rgba(245,158,11,.15);color:var(--yellow)}
+.ss{background:rgba(107,107,133,.15);color:var(--muted)}
+.srctag{font-size:9px;padding:1px 6px;border-radius:20px;background:rgba(124,92,252,.15);color:var(--accent)}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.mo.open{display:flex}
+.modal{background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:20px;animation:su .25s ease}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.mt{font-family:"Syne",sans-serif;font-size:17px;font-weight:800;margin-bottom:16px}
+.ir{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.il{color:var(--muted)}.iv{font-weight:500;text-align:right;max-width:60%;word-break:break-word}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.chip{padding:8px 14px;border-radius:20px;border:1px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;background:var(--surface2);color:var(--muted);font-family:"Syne",sans-serif}
+.chip.a{border-color:var(--accent);color:var(--accent);background:rgba(124,92,252,.1)}
+.chip.ay{border-color:var(--yellow);color:var(--yellow);background:rgba(245,158,11,.1)}
+.chip.ag{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.1)}
+.chip.ar{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.1)}
+.ni{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:"DM Sans",sans-serif;font-size:14px;padding:12px;resize:none;min-height:80px;margin:10px 0}
+.ni:focus{outline:none;border-color:var(--accent)}
+.tmpl{background:var(--surface2);border-radius:10px;padding:12px;margin:10px 0;font-size:13px;line-height:1.7;border-left:3px solid var(--accent2);white-space:pre-wrap}
+.abtns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.fl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;margin-top:14px}
+.fi{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;padding:12px 14px}
+.fi:focus{outline:none;border-color:var(--accent)}
+.rb{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin:14px 0;font-family:monospace;font-size:14px;line-height:2;border-left:3px solid var(--accent)}
+.rf{background:rgba(124,92,252,.08);border:1px solid rgba(124,92,252,.3);border-radius:12px;padding:14px;margin:10px 0;font-family:monospace;font-size:13px;line-height:2}
+.isec{margin:0 16px 14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.isec-h{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.isec-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.isec-t{font-family:"Syne",sans-serif;font-size:14px;font-weight:700}
+.isec-s{font-size:12px;color:var(--muted);margin-top:2px}
+.isec-b{padding:14px 16px}
+.drop{border:2px dashed var(--border);border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;position:relative;transition:all .2s}
+.drop:active,.drop.drag{border-color:var(--accent);background:rgba(124,92,252,.05)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.prog-wrap{background:var(--surface2);border-radius:8px;overflow:hidden;height:8px;margin:10px 0}
+.prog-bar{height:100%;background:var(--accent);border-radius:8px;transition:width .3s;width:0%}
+.prog-txt{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+.ptbl{width:100%;border-collapse:collapse;font-size:12px}
+.ptbl th{background:var(--surface2);padding:8px;text-align:left;color:var(--muted);font-size:11px}
+.ptbl td{padding:8px;border-bottom:1px solid var(--border)}
+.ptbl tr.dup td{color:var(--muted);opacity:.5}
+.nb{font-size:10px;background:rgba(34,197,94,.15);color:var(--green);padding:2px 6px;border-radius:20px}
+.db2{font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:2px 6px;border-radius:20px}
+.isum{background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;display:flex;gap:0;justify-content:space-around}
+.isn{font-family:"Syne",sans-serif;font-size:20px;font-weight:800;text-align:center}
+.isl{font-size:11px;color:var(--muted);margin-top:2px;text-align:center}
+.gsinp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;padding:10px 12px;margin-bottom:8px}
+.gsinp:focus{outline:none;border-color:var(--accent)}
+.minp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;padding:12px;margin-bottom:8px}
+.minp:focus{outline:none;border-color:var(--accent)}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:12px;font-size:13px;z-index:300;animation:ft 2.5s forwards;white-space:nowrap}
+@keyframes ft{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;line-height:1.8}
+.ph{padding:16px 20px 8px}
+.ph h2{font-family:"Syne",sans-serif;font-size:20px;font-weight:800}
+.ph p{font-size:13px;color:var(--muted);margin-top:3px}
+.rj-hdr{font-family:"Syne",sans-serif;font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding:12px 16px 0;display:flex;align-items:center;gap:6px}
+.rj-sub{font-size:11px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar"><h1>Up<span>Scale</span> BD</h1><span class="badge" id="D"></span></div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dash">
+      <div class="dash-header"><div class="dash-sub">Привет 👋 Сегодня:</div><div class="dash-date" id="DD"></div></div>
+      <div class="stats-row">
+        <div class="stat s-out"><div class="n" id="sO">0</div><div class="l">Аутрич</div></div>
+        <div class="stat s-on"><div class="n" id="sN">0</div><div class="l">Онбординг</div></div>
+        <div class="stat s-act"><div class="n" id="sA">0</div><div class="l">Актив</div></div>
+      </div>
+      <div class="sec">Ежедневный отчёт</div>
+      <div class="rbox"><div class="rprev" id="RP"></div><button class="btn btn-p" onclick="copyReport()">📋 Скопировать отчёт</button></div>
+      <div class="sec">Быстрые шаблоны</div>
+      <div style="padding:0 20px;display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        <button class="btn btn-s" onclick="copyT('intro')">💬 Вступительное сообщение</button>
+        <button class="btn btn-s" onclick="copyT('followup')">🔄 Фоллоу-ап</button>
+        <button class="btn btn-s" onclick="copyT('boss')">📤 Формат для босса</button>
+      </div>
+      <div class="sec">Реф. ссылка</div>
+      <div style="padding:0 20px 24px"><div class="rf">https://app.bookflow.sh?ref=214UO</div>
+        <button class="btn btn-s" style="margin-top:8px" onclick="cp('https://app.bookflow.sh?ref=214UO')">📋 Скопировать</button></div>
+    </div>
+
+    <!-- БАЗА -->
+    <div class="page" id="page-outreach">
+      <div class="sbar">
+        <input type="text" id="SI" placeholder="🔍 Поиск..." oninput="rc()">
+        <div class="frow">
+          <button class="fb" id="fS" onclick="tf('size')">🔴 Крупные</button>
+          <button class="fb" id="fO" onclick="tf('open')">💬 Открыты</button>
+          <button class="fb" id="fN" onclick="tf('new')">✨ Импорт</button>
+        </div>
+        <div class="frow">
+          <button class="fb" id="fNC" onclick="tf('notcontacted')" style="flex:2">📭 Не писали</button>
+          <button class="fb" id="fWC" onclick="tf('wascontacted')" style="flex:2">📩 Писали</button>
+          <button class="fb red-fb" id="fRJ" onclick="tf('showrejected')" style="flex:1" title="Показать отказавшихся">🚫</button>
+        </div>
+      </div>
+      <div class="dbc" id="DBC"></div>
+      <div class="clist" id="CL"></div>
+    </div>
+
+    <!-- ИМПОРТ -->
+    <div class="page" id="page-import">
+      <div class="ph"><h2>База каналов</h2><p>Импорт и управление</p></div>
+      <div class="isec">
+        <div class="isec-h"><div class="isec-ico" style="background:rgba(34,197,94,.15)">📊</div>
+          <div><div class="isec-t">Загрузить Excel (.xlsx)</div><div class="isec-s">Любой размер — хоть 100 000 строк</div></div></div>
+        <div class="isec-b">
+          <div class="drop" id="FD">
+            <input type="file" accept=".xlsx,.xls,.csv" id="FI" onchange="handleFile(event)">
+            <div style="font-size:28px;margin-bottom:8px">📂</div>
+            <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text);display:block;margin-bottom:4px">Нажми чтобы выбрать файл</strong>.xlsx / .csv — любой размер</div>
+          </div>
+          <div id="FP" style="margin-top:10px;display:none">
+            <div class="prog-wrap"><div class="prog-bar" id="PB"></div></div>
+            <div class="prog-txt" id="PT2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="isec">
+        <div class="isec-h"><div class="isec-ico" style="background:rgba(0,229,176,.15)">🟢</div>
+          <div><div class="isec-t">Google Таблицы</div><div class="isec-s">Публичная ссылка (открыт для всех)</div></div></div>
+        <div class="isec-b">
+          <input class="gsinp" type="text" id="GU" placeholder="https://docs.google.com/spreadsheets/d/...">
+          <div id="GS" style="font-size:12px;margin-bottom:8px;display:none"></div>
+          <button class="btn btn-p" onclick="importGS()">🟢 Загрузить из Google Sheets</button>
+        </div>
+      </div>
+      <div class="isec">
+        <div class="isec-h"><div class="isec-ico" style="background:rgba(124,92,252,.15)">✏️</div>
+          <div><div class="isec-t">Добавить вручную</div><div class="isec-s">Ссылка на Telegram-канал</div></div></div>
+        <div class="isec-b">
+          <input class="minp" type="text" id="MU" placeholder="https://t.me/channelname  или  @channel" oninput="valM()">
+          <div id="ME" style="font-size:12px;color:var(--red);margin-bottom:8px;display:none"></div>
+          <button class="btn btn-p" id="MAB" onclick="addManual()" disabled>➕ Добавить канал</button>
+        </div>
+      </div>
+      <div style="padding:0 16px 24px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
+          <div class="sec" style="padding:0;margin-bottom:12px">Статистика базы</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="DBS"></div>
+          <button class="btn btn-s" style="margin-top:12px;color:var(--red);border-color:rgba(239,68,68,.3)" onclick="askClear()">🗑 Очистить всю базу</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ПОДКЛЮЧИТЬ -->
+    <div class="page" id="page-connect">
+      <div class="ph"><h2>Подключить инфла</h2><p>Генератор сообщения для босса</p></div>
+      <div style="padding:16px">
+        <div class="fl">Ссылка на канал</div><input class="fi" type="text" id="cL" placeholder="https://t.me/channel" oninput="ucr()">
+        <div class="fl">ID в приложении</div><input class="fi" type="text" id="cI" placeholder="558a214c-c894-..." oninput="ucr()">
+        <div class="fl">Размер аудитории</div>
+        <select class="fi" id="cS" onchange="ucr()">
+          <option value="">— выбери —</option>
+          <option value="5k">Маленький (до 50к) → 5k</option>
+          <option value="10k">Средний (50к–200к) → 10k</option>
+          <option value="25k">Средний+ (200к–500к) → 25k</option>
+          <option value="50k">Большой (500к+) → 50k ⚠️ согл.</option>
+          <option value="100k">Очень крупный → 100k ⚠️ согл.</option>
+        </select>
+        <div class="fl">Реф. процент</div>
+        <select class="fi" id="cR" onchange="ucr()"><option value="20%">20%</option><option value="25%" selected>25%</option></select>
+        <div class="fl">Результат для босса</div>
+        <div class="rb" id="CR">— заполни поля выше —</div>
+        <div class="abtns">
+          <button class="btn btn-p" onclick="copyCR()">📋 Скопировать для босса</button>
+          <button class="btn btn-s" onclick="clrC()">🗑 Очистить</button>
+        </div>
+        <div style="margin-top:20px">
+          <div class="fl">Ссылка для регистрации инфла</div>
+          <div class="rb">https://app.bookflow.sh?ref=214UO</div>
+          <button class="btn btn-s" style="margin-top:8px" onclick="cp('https://app.bookflow.sh?ref=214UO')">📋 Скопировать</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRM -->
+    <div class="page" id="page-crm">
+      <div class="ph"><h2>Мои инфлы</h2><p>Активные и онбординг</p></div>
+      <div id="CRML" style="padding:0 16px 0"></div>
+      <div class="rj-hdr">🚫 Отказались <span class="rj-sub">— скрыты из базы и не импортируются повторно</span></div>
+      <div id="RJLIST" style="padding:0 16px 20px"></div>
+    </div>
+  </div>
+
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="sw('dash',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Главная
+    </button>
+    <button class="tab-btn" onclick="sw('outreach',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>База
+    </button>
+    <button class="tab-btn" onclick="sw('import',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Импорт
+    </button>
+    <button class="tab-btn" onclick="sw('connect',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Подключить
+    </button>
+    <button class="tab-btn" onclick="sw('crm',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>CRM
+    </button>
+  </nav>
+</div>
+
+<!-- CHANNEL MODAL -->
+<div class="mo" id="CM"><div class="modal">
+  <div class="mh"></div><div class="mt" id="CMT"></div>
+  <div id="CMI"></div>
+  <div style="margin-top:14px"><div class="fl">Статус</div>
+    <div class="chips">
+      <div class="chip" onclick="setSt(this,'none')">Не трогали</div>
+      <div class="chip" onclick="setSt(this,'contacted')" data-c="y">Написали</div>
+      <div class="chip" onclick="setSt(this,'onboarding')">Онбординг</div>
+      <div class="chip" onclick="setSt(this,'active')" data-c="g">Актив 🎉</div>
+      <div class="chip" onclick="setSt(this,'rejected')" data-c="r">Отказ 🚫</div>
+    </div>
+  </div>
+  <div class="fl">Заметки</div>
+  <textarea class="ni" id="CN" placeholder="Имя админа, договорённости..."></textarea>
+  <div class="fl">Шаблон первого сообщения</div>
+  <div class="tmpl" id="CTM"></div>
+  <div class="abtns">
+    <button class="btn btn-p" id="OTG">📱 Открыть в Telegram</button>
+    <button class="btn btn-s" onclick="cp(document.getElementById('CTM').textContent)">📋 Скопировать шаблон</button>
+    <button class="btn btn-s" onclick="saveCh()">✅ Сохранить</button>
+    <button class="btn btn-s" onclick="cm('CM')" style="color:var(--muted)">Закрыть</button>
+  </div>
+</div></div>
+
+<!-- IMPORT PREVIEW MODAL -->
+<div class="mo" id="PM"><div class="modal">
+  <div class="mh"></div><div class="mt" id="PMT">Предпросмотр импорта</div>
+  <div class="isum" id="PSUM"></div>
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Превью (первые 20)</div>
+  <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+    <table class="ptbl" id="PTBL"></table>
+  </div>
+  <div class="abtns" style="margin-top:16px">
+    <button class="btn btn-g" id="CIB" onclick="doImport()">✅ Добавить новые каналы</button>
+    <button class="btn btn-s" onclick="cm('PM')">Отмена</button>
+  </div>
+</div></div>
+
+<!-- CONFIRM CLEAR -->
+<div class="mo" id="CCM"><div class="modal">
+  <div class="mh"></div><div class="mt">⚠️ Очистить базу?</div>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">Удалит все <strong id="CCN" style="color:var(--text)">0</strong> каналов. Статусы и заметки сохранятся.</p>
+  <div class="abtns">
+    <button class="btn btn-r" onclick="doClear()">🗑 Да, очистить</button>
+    <button class="btn btn-s" onclick="cm('CCM')">Отмена</button>
+  </div>
+</div></div>
+
+<script>
+// ═══ INDEXEDDB ═══
+const DB_NAME='upscalebd',DB_VER=1;
+let db=null;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('channels'))d.createObjectStore('channels',{keyPath:'u'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=rej})}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).getAll();req.onsuccess=()=>res(req.result);req.onerror=rej})}
+function dbPutMany(store,items){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const os=tx.objectStore(store);let i=0;function next(){if(i>=items.length){res();return}const r=os.put(items[i++]);r.onsuccess=next;r.onerror=rej}next()})}
+function dbClear(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const r=tx.objectStore(store).clear();r.onsuccess=res;r.onerror=rej})}
+
+// ═══ STATE ═══
+let ST=JSON.parse(localStorage.getItem('bdmeta')||'{}');
+if(!ST.cs)ST.cs={};
+if(!ST.cn)ST.cn={};
+if(!ST.stats)ST.stats={};
+function saveMeta(){localStorage.setItem('bdmeta',JSON.stringify(ST))}
+
+let allChannels=[],viewChannels=[],CK=null,pending=[];
+let FS={size:false,open:false,new:false,notcontacted:false,wascontacted:false,showrejected:false};
+
+// ═══ UTILS ═══
+function ukey(u){return(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^t\.me\//,'').replace(/^telegram\.me\//,'').replace(/\/+$/,'')}
+function fmtS(n){n=parseInt(n)||0;return n>=1e6?(n/1e6).toFixed(1)+'М':n>=1000?Math.round(n/1000)+'к':n||'—'}
+function chal(s){s=parseInt(s)||0;return s>=500000?'50k ⚠️':s>=200000?'25k':s>=50000?'10k':'5k'}
+function tdk(){return new Date().toISOString().split('T')[0]}
+function es(){const k=tdk();if(!ST.stats[k])ST.stats[k]={outreach:0,onboard:0,active:0};return ST.stats[k]}
+function cm(id){document.getElementById(id).classList.remove('open')}
+function om(id){document.getElementById(id).classList.add('open')}
+function cp(t){if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('📋 Скопировано!'))}else{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('📋 Скопировано!')}}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2700)}
+function setProgress(pct,txt){document.getElementById('PB').style.width=pct+'%';document.getElementById('PT2').textContent=txt}
+
+// ═══ INIT ═══
+window.addEventListener('DOMContentLoaded',async()=>{
+  await openDB();
+  allChannels=await dbGetAll('channels');
+  const now=new Date();
+  const days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  document.getElementById('D').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+  document.getElementById('DD').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  updDash();rc();rCRM();rDBS();
+  ['CM','PM','CCM'].forEach(id=>document.getElementById(id).addEventListener('click',function(e){if(e.target===this)cm(id)}));
+});
+
+function sw(tab,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');btn.classList.add('active');
+  if(tab==='dash')updDash();if(tab==='crm')rCRM();if(tab==='import')rDBS();if(tab==='outreach')rc();
+}
+
+// ═══ DASHBOARD ═══
+function updDash(){const s=es();document.getElementById('sO').textContent=s.outreach;document.getElementById('sN').textContent=s.onboard;document.getElementById('sA').textContent=s.active;document.getElementById('RP').textContent=`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`}
+function copyReport(){const s=es();cp(`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`)}
+const TMPL={
+  intro:`Привет! 👋\n\nМеня зовут [Имя], я BD менеджер команды UpScale.\n\nУ тебя отличный крипто-канал — хочу предложить сотрудничество с платформой Bookflow.\n\nПредлагаем:\n💰 Реф. процент 20-25%\n🎯 Стартовый челендж для аудитории\n\nРасскажу подробнее?`,
+  followup:`Привет, ещё раз! 👋\n\nПисал тебе пару дней назад насчёт сотрудничества с Bookflow.\n\nПросто хотел убедиться что сообщение дошло — было бы круто поговорить!`,
+  boss:`[ссылка на канал]\n[id в приложении]\n[размер челенджа]\n[реф процент]`
+};
+function copyT(t){cp(TMPL[t])}
+
+// ═══ CHANNELS RENDER ═══
+let renderLimit=50;
+function rc(){
+  let chs=[...allChannels];
+  const q=(document.getElementById('SI').value||'').toLowerCase().trim();
+  if(q)chs=chs.filter(c=>(c.n||'').toLowerCase().includes(q)||(c.u||'').toLowerCase().includes(q));
+  if(FS.size)chs=chs.filter(c=>(parseInt(c.s)||0)>=500000);
+  if(FS.open)chs=chs.filter(c=>c.c==='Открыты');
+  if(FS.new)chs=chs.filter(c=>c.src!=='builtin');
+  // Rejected: hidden by default, shown only when 🚫 filter ON
+  if(FS.showrejected){
+    chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')==='rejected');
+  } else {
+    chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')!=='rejected');
+    if(FS.notcontacted)chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')==='none');
+    if(FS.wascontacted)chs=chs.filter(c=>['contacted','onboarding','active'].includes(ST.cs[ukey(c.u)]||'none'));
+  }
+  viewChannels=chs;renderLimit=50;
+  document.getElementById('DBC').textContent=`Показано: ${Math.min(renderLimit,chs.length)} из ${chs.length} (всего в базе: ${allChannels.length})`;
+  renderList();
+}
+function renderList(){
+  const chs=viewChannels.slice(0,renderLimit);
+  const list=document.getElementById('CL');
+  if(!chs.length){list.innerHTML=allChannels.length===0?'<div class="empty">База пуста 📭<br><br>Перейди во вкладку <strong>Импорт</strong></div>':'<div class="empty">Ничего не найдено 🔍</div>';return}
+  list.innerHTML=chs.map(ch=>{
+    const k=ukey(ch.u);const st=ST.cs[k]||'none';
+    const s=parseInt(ch.s)||0;
+    const sz=s>=500000?'big':s>=50000?'med':'small';
+    const stag=sz==='big'?`<span class="stag sb">Крупный</span>`:sz==='med'?`<span class="stag sm">Средний</span>`:`<span class="stag ss">Малый</span>`;
+    const src=ch.src&&ch.src!=='builtin'?`<span class="srctag">${ch.src}</span>`:'';
+    const sc=st==='contacted'?' contacted':st==='onboarding'?' onboarding':st==='active'?' active-inf':'';
+    const dc=st==='active'?' active-inf':st!=='none'&&st!=='rejected'?` ${st}`:'';
+    return `<div class="cc${sc}" onclick="oCh('${k}')"><div class="dot${dc}"></div>
+      <div class="cr1"><div class="cn">${ch.n||ch.u}${stag}</div><div class="cs">${fmtS(ch.s)}</div></div>
+      <div class="cr2"><span class="cl">${(ch.u||'').replace('https://t.me/','@')}</span>${ch.c?`<span class="cco ${ch.c==='Открыты'?'op':'cl2'}">${ch.c}</span>`:''}${src}</div>
+    </div>`;
+  }).join('');
+  if(viewChannels.length>renderLimit){
+    const more=document.createElement('button');
+    more.className='btn btn-s';more.style.marginBottom='16px';
+    more.textContent=`Показать ещё (${viewChannels.length-renderLimit} каналов)`;
+    more.onclick=()=>{renderLimit+=100;document.getElementById('DBC').textContent=`Показано: ${Math.min(renderLimit,viewChannels.length)} из ${viewChannels.length} (всего: ${allChannels.length})`;renderList()};
+    list.appendChild(more);
+  }
+}
+function tf(t){
+  // notcontacted / wascontacted / showrejected — взаимоисключающие
+  if(['notcontacted','wascontacted','showrejected'].includes(t)){
+    ['notcontacted','wascontacted','showrejected'].forEach(k=>{if(k!==t&&FS[k]){FS[k]=false;document.getElementById({notcontacted:'fNC',wascontacted:'fWC',showrejected:'fRJ'}[k]).classList.remove('on')}});
+  }
+  FS[t]=!FS[t];
+  document.getElementById({size:'fS',open:'fO',new:'fN',notcontacted:'fNC',wascontacted:'fWC',showrejected:'fRJ'}[t]).classList.toggle('on',FS[t]);
+  rc();
+}
+
+// ═══ CHANNEL MODAL ═══
+function oCh(k){
+  CK=k;const ch=allChannels.find(c=>ukey(c.u)===k);if(!ch)return;
+  const st=ST.cs[k]||'none';
+  document.getElementById('CMT').textContent=ch.n||ch.u;
+  document.getElementById('CMI').innerHTML=[['Подписчики',fmtS(ch.s)],['Ссылка',(ch.u||'').replace('https://t.me/','@')],['Комментарии',ch.c||'—'],['Рек. челендж',chal(ch.s)]].map(([l,v])=>`<div class="ir"><span class="il">${l}</span><span class="iv">${v}</span></div>`).join('');
+  document.querySelectorAll('#CM .chip').forEach(c=>{c.classList.remove('a','ay','ag','ar')});
+  const sm={none:0,contacted:1,onboarding:2,active:3,rejected:4};
+  const chips=document.querySelectorAll('#CM .chip');
+  const ci=sm[st];if(ci!==undefined){const chip=chips[ci];const cc=chip.dataset.c;chip.classList.add(cc==='y'?'ay':cc==='g'?'ag':cc==='r'?'ar':'a')}
+  document.getElementById('CN').value=ST.cn[k]||'';
+  document.getElementById('CTM').textContent=`Привет! 👋\n\nМеня зовут [Имя], я BD менеджер команды UpScale.\n\nВижу что у тебя сильный крипто-канал "${ch.n||ch.u}" — хочу предложить интересное сотрудничество.\n\nМы работаем с платформой Bookflow. Для блогеров:\n\n💰 Реф. процент 20-25%\n🎯 Стартовый челендж ${chal(ch.s)} для твоей аудитории\n\nМогу подробнее рассказать?`;
+  document.getElementById('OTG').onclick=()=>{
+    const tgLink=ch.u.replace('https://t.me/','tg://resolve?domain=').replace('http://t.me/','tg://resolve?domain=');
+    window.location.href=tgLink;
+    setTimeout(()=>window.open(ch.u,'_blank'),500);
+  };
+  om('CM');
+}
+function setSt(el,st){
+  document.querySelectorAll('#CM .chip').forEach(c=>{c.classList.remove('a','ay','ag','ar')});
+  const cc=el.dataset.c;el.classList.add(cc==='y'?'ay':cc==='g'?'ag':cc==='r'?'ar':'a');
+  if(CK){ST.cs[CK]=st;const s=es();s.outreach=Object.values(ST.cs).filter(v=>v!=='none'&&v!=='rejected').length;s.onboard=Object.values(ST.cs).filter(v=>v==='onboarding').length;s.active=Object.values(ST.cs).filter(v=>v==='active').length;saveMeta();updDash()}
+}
+function saveCh(){if(CK){ST.cn[CK]=document.getElementById('CN').value;saveMeta()}cm('CM');rc();toast('✅ Сохранено')}
+
+// ═══ CRM ═══
+function rCRM(){
+  const lb={contacted:'Написали',onboarding:'Онбординг',active:'Актив'};
+  const cl={contacted:'var(--yellow)',onboarding:'var(--accent)',active:'var(--green)'};
+  const entries=Object.entries(ST.cs).filter(([,v])=>v!=='none'&&v!=='rejected').map(([k,st])=>({k,st,ch:allChannels.find(c=>ukey(c.u)===k)})).filter(e=>e.ch);
+  const L=document.getElementById('CRML');
+  if(!entries.length){L.innerHTML='<div class="empty" style="padding-bottom:8px">Пока нет активных инфлов<br>Начни аутрич во вкладке База 🚀</div>';}
+  else{L.innerHTML=entries.map(({k,st,ch})=>{const nt=ST.cn[k]||'';const c=cl[st]||'var(--muted)';
+    return `<div class="cc" onclick="oCh('${k}')" style="border-left:3px solid ${c}">
+      <div class="cr1"><div class="cn">${ch.n||ch.u}</div><div class="cs" style="background:${c}22;color:${c}">${lb[st]||st}</div></div>
+      <div class="cr2"><span class="cl">${(ch.u||'').replace('https://t.me/','@')}</span><span style="font-size:11px;color:var(--muted)">${fmtS(ch.s)} подп.</span></div>
+      ${nt?`<div style="font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${nt.substring(0,80)}${nt.length>80?'...':''}</div>`:''}
+    </div>`}).join('');}
+  // Rejected list
+  const rjEntries=Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>({k,ch:allChannels.find(c=>ukey(c.u)===k)})).filter(e=>e.ch);
+  const RL=document.getElementById('RJLIST');
+  if(!rjEntries.length){RL.innerHTML='<div style="font-size:13px;color:var(--muted);padding:4px 0 8px">Список пуст</div>';return}
+  RL.innerHTML=rjEntries.map(({k,ch})=>`<div class="cc" style="border-left:3px solid var(--red);margin-bottom:8px">
+    <div class="cr1">
+      <div class="cn" style="font-size:13px">${ch.n||ch.u}</div>
+      <button onclick="unReject('${k}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Вернуть</button>
+    </div>
+    <div class="cr2"><span class="cl">${(ch.u||'').replace('https://t.me/','@')}</span><span style="font-size:11px;color:var(--muted)">${fmtS(ch.s)} подп.</span></div>
+  </div>`).join('');
+}
+function unReject(k){ST.cs[k]='none';saveMeta();rCRM();rc();toast('↩️ Возвращён в базу')}
+
+// ═══ MANUAL ADD ═══
+function valM(){const v=document.getElementById('MU').value.trim();const e2=document.getElementById('ME');const b=document.getElementById('MAB');if(!v){e2.style.display='none';b.disabled=true;return}const ok=v.includes('t.me')||v.includes('telegram')||v.startsWith('@')||v.startsWith('http');e2.style.display=ok?'none':'block';e2.textContent='Введи ссылку вида https://t.me/channel или @channel';b.disabled=!ok}
+async function addManual(){
+  let u=document.getElementById('MU').value.trim();
+  if(u.startsWith('@'))u='https://t.me/'+u.slice(1);
+  if(!u.startsWith('http'))u='https://'+u;
+  const k=ukey(u);
+  if(allChannels.some(c=>ukey(c.u)===k)){toast('⚠️ Уже есть в базе');return}
+  const ch={n:u.replace('https://t.me/','@'),u,s:0,c:'',src:'вручную',addedAt:Date.now()};
+  await dbPutMany('channels',[ch]);allChannels.push(ch);rc();rDBS();
+  document.getElementById('MU').value='';document.getElementById('MAB').disabled=true;toast('✅ Канал добавлен');
+}
+
+// ═══ XLSX PARSER ═══
+function colIdx(letters){let n=0;for(const c of letters)n=n*26+(ord(c)-64);return n-1}
+function ord(c){return c.charCodeAt(0)}
+function decXML(s){return(s||'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'")}
+
+async function unzip(bytes){
+  const files={};
+  const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  let eocd=-1;
+  for(let i=bytes.length-22;i>=Math.max(0,bytes.length-65536);i--){
+    if(bytes[i]===0x50&&bytes[i+1]===0x4B&&bytes[i+2]===0x05&&bytes[i+3]===0x06){eocd=i;break}
+  }
+  if(eocd<0)return files;
+  const cdOffset=dv.getUint32(eocd+16,true);
+  const cdSize=dv.getUint32(eocd+12,true);
+  const entries=[];let ci=cdOffset;
+  while(ci<cdOffset+cdSize&&ci+46<=bytes.length){
+    if(bytes[ci]!==0x50||bytes[ci+1]!==0x4B||bytes[ci+2]!==0x01||bytes[ci+3]!==0x02)break;
+    const comp=dv.getUint16(ci+10,true);
+    const compSize=dv.getUint32(ci+20,true);
+    const fnLen=dv.getUint16(ci+28,true);
+    const extraLen=dv.getUint16(ci+30,true);
+    const commentLen=dv.getUint16(ci+32,true);
+    const localOffset=dv.getUint32(ci+42,true);
+    const fname=new TextDecoder().decode(bytes.slice(ci+46,ci+46+fnLen));
+    entries.push({fname,comp,compSize,localOffset});
+    ci+=46+fnLen+extraLen+commentLen;
+  }
+  for(const e of entries){
+    if(e.compSize===0)continue;
+    const li=e.localOffset;
+    const fnLen2=dv.getUint16(li+26,true);
+    const extraLen2=dv.getUint16(li+28,true);
+    const dataStart=li+30+fnLen2+extraLen2;
+    const compData=bytes.slice(dataStart,dataStart+e.compSize);
+    if(e.comp===8){
+      try{
+        const ds=new DecompressionStream('deflate-raw');
+        const w=ds.writable.getWriter();const r=ds.readable.getReader();
+        w.write(compData);w.close();
+        const chunks=[];let total=0;
+        while(true){const{done,value}=await r.read();if(done)break;chunks.push(value);total+=value.length}
+        const out=new Uint8Array(total);let off=0;for(const c of chunks){out.set(c,off);off+=c.length}
+        files[e.fname]=out;
+      }catch(err){console.warn('unzip:',e.fname,err)}
+    }else if(e.comp===0){files[e.fname]=bytes.slice(dataStart,dataStart+e.compSize)}
+  }
+  return files;
+}
+
+async function parseXLSX(buffer,onProgress){
+  const bytes=new Uint8Array(buffer);
+  onProgress(10,'Распаковываю файл...');
+  const zip=await unzip(bytes);
+  onProgress(25,'Читаю строки...');
+  // Shared strings
+  let ss=[];
+  const ssXml=zip['xl/sharedStrings.xml'];
+  if(ssXml){
+    const txt=new TextDecoder().decode(ssXml);
+    for(const m of txt.matchAll(/<si>([\s\S]*?)<\/si>/g)){
+      const parts=[...m[1].matchAll(/<t[^>]*>([^<]*)<\/t>/g)].map(p=>decXML(p[1]));
+      ss.push(parts.join(''));
+    }
+  }
+  onProgress(45,'Парсю ячейки...');
+  const sheetXml=zip['xl/worksheets/sheet1.xml'];
+  if(!sheetXml)return null;
+  const sheetTxt=new TextDecoder().decode(sheetXml);
+  const rows=[];
+  for(const rm of sheetTxt.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)){
+    const cells={};
+    for(const cm of rm[1].matchAll(/<c\s+r="([A-Z]+)\d+"([^>]*)>([\s\S]*?)<\/c>/g)){
+      const col=colIdx(cm[1]);
+      const tM=cm[2].match(/t="([^"]*)"/);const cellType=tM?tM[1]:'';
+      const vM=cm[3].match(/<v>([^<]*)<\/v>/);let val=vM?vM[1]:'';
+      if(cellType==='s'){val=ss[parseInt(val)]||'';}
+      else if(val){try{val=String(parseInt(parseFloat(val)))||val;}catch(e){}}
+      cells[col]=val;
+    }
+    const keys=Object.keys(cells).map(Number);
+    if(keys.length){const mx=Math.max(...keys);const arr=[];for(let i=0;i<=mx;i++)arr.push(cells[i]||'');rows.push(arr);}
+  }
+  onProgress(80,'Обрабатываю каналы...');
+  return rows;
+}
+
+function parseCSV(text){
+  return text.split(/\r?\n/).map(line=>{
+    const res=[];let cur='',inQ=false;
+    for(const ch of line){if(ch==='"'){inQ=!inQ}else if(ch===','&&!inQ){res.push(cur.trim());cur=''}else{cur+=ch}}
+    res.push(cur.trim());return res;
+  }).filter(r=>r.some(c=>c));
+}
+
+function detectCols(rows){
+  const map={};
+  for(let i=0;i<Math.min(5,rows.length);i++){
+    const r=rows[i].map(c=>String(c).toLowerCase().trim());
+    if(r.some(c=>c.includes('ссылк')||c.includes('link')||c.includes('url')||c.includes('t.me'))){
+      r.forEach((cell,idx)=>{
+        if(cell.includes('назван')||cell.includes('name')||cell.includes('title'))map.n=idx;
+        if(cell.includes('ссылк')||cell.includes('link')||cell.includes('url'))map.u=idx;
+        if(cell.includes('участник')||cell.includes('подпис')||cell.includes('subscriber')||cell.includes('member'))map.s=idx;
+        if(cell.includes('коммент')||cell.includes('comment'))map.c=idx;
+      });
+      return{headerRow:i,map};
+    }
+  }
+  const sample=rows.slice(0,8);
+  sample.forEach(row=>row.forEach((val,idx)=>{const v=String(val);if(v.includes('t.me')||v.includes('telegram.me'))map.u=idx;if(/^\d{4,}$/.test(v.replace(/[\s,]/g,'')))map.s=idx}));
+  if(map.u!==undefined&&map.n===undefined)map.n=map.u===0?1:0;
+  return{headerRow:0,map};
+}
+
+function rowsToChannels(rows,sourceName){
+  const{headerRow,map}=detectCols(rows);
+  const data=rows.slice(headerRow+1);
+  const existingKeys=new Set(allChannels.map(c=>ukey(c.u)));
+  // Channels we rejected — never import again
+  const rejectedKeys=new Set(Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>k));
+  const newOnes=[],dups=[],allParsed=[];
+  for(const r of data){
+    const u=map.u!==undefined?String(r[map.u]||'').trim():'';
+    if(!u||!u.includes('.'))continue;
+    const n=map.n!==undefined?String(r[map.n]||'').trim():'';
+    const s=map.s!==undefined?parseInt(String(r[map.s]||'').replace(/[^\d]/g,''))||0:0;
+    const c=map.c!==undefined?String(r[map.c]||''):'';
+    const ch={n:n||u,u,s,c,src:sourceName,addedAt:Date.now()};
+    allParsed.push(ch);
+    const k=ukey(u);
+    if(rejectedKeys.has(k)){dups.push({...ch,_rej:true});}
+    else if(existingKeys.has(k)){dups.push(ch);}
+    else{newOnes.push(ch);}
+  }
+  return{allParsed,newOnes,dups};
+}
+
+// ═══ FILE HANDLER ═══
+async function handleFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const fp=document.getElementById('FP');fp.style.display='block';setProgress(5,'Читаю файл...');
+  try{
+    const buf=await file.arrayBuffer();let rows=null;
+    if(file.name.toLowerCase().endsWith('.csv')){rows=parseCSV(new TextDecoder('utf-8').decode(buf));setProgress(70,'Обрабатываю...');}
+    else{rows=await parseXLSX(buf,setProgress);}
+    if(!rows||rows.length<2){setProgress(100,'❌ Не удалось прочитать файл');return}
+    setProgress(90,'Проверяю дубликаты...');
+    const{allParsed,newOnes,dups}=rowsToChannels(rows,file.name);
+    setProgress(100,`Готово: ${allParsed.length} строк`);
+    if(!allParsed.length){setProgress(100,'❌ Каналы не найдены — нужен столбец со ссылками t.me');return}
+    setTimeout(()=>{fp.style.display='none'},1500);
+    showPreview(allParsed,newOnes,dups,file.name);
+  }catch(err){setProgress(100,'❌ Ошибка: '+err.message);console.error(err)}
+  e.target.value='';
+}
+
+// ═══ GOOGLE SHEETS ═══
+async function importGS(){
+  const raw=document.getElementById('GU').value.trim();
+  if(!raw){toast('⚠️ Вставь ссылку');return}
+  const match=raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if(!match){toast('❌ Не похоже на Google Sheets');return}
+  const gs=document.getElementById('GS');gs.style.display='block';gs.style.color='var(--muted)';gs.innerHTML='<span class="spin"></span> Загружаю...';
+  try{
+    const resp=await fetch(`https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`);
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const text=await resp.text();const rows=parseCSV(text);gs.style.display='none';
+    const{allParsed,newOnes,dups}=rowsToChannels(rows,'Google Sheets');
+    if(!allParsed.length){gs.style.display='block';gs.style.color='var(--red)';gs.textContent='❌ Каналы не найдены';return}
+    showPreview(allParsed,newOnes,dups,'Google Sheets');
+  }catch(err){gs.style.color='var(--red)';gs.textContent='❌ Ошибка. Таблица должна быть открыта для всех по ссылке.'}
+}
+
+// ═══ PREVIEW ═══
+function showPreview(all,newOnes,dups,name){
+  pending=newOnes;
+  const rejSkipped=dups.filter(d=>d._rej).length;
+  document.getElementById('PMT').textContent='Импорт: '+name;
+  document.getElementById('PSUM').innerHTML=`
+    <div><div class="isn" style="color:var(--accent)">${all.length}</div><div class="isl">Всего</div></div>
+    <div><div class="isn" style="color:var(--green)">${newOnes.length}</div><div class="isl">Новых</div></div>
+    <div><div class="isn" style="color:var(--red)">${dups.length-rejSkipped}</div><div class="isl">Дублей</div></div>
+    <div><div class="isn" style="color:var(--muted)">${rejSkipped}</div><div class="isl">Отказы</div></div>`;
+  const ex=new Set(allChannels.map(c=>ukey(c.u)));
+  const rejK=new Set(Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>k));
+  document.getElementById('PTBL').innerHTML=
+    '<thead><tr><th>Канал</th><th>Ссылка</th><th>Подп.</th><th></th></tr></thead><tbody>'+
+    all.slice(0,20).map(ch=>{
+      const k=ukey(ch.u);
+      const isRej=rejK.has(k);const isDup=!isRej&&ex.has(k);
+      return`<tr class="${isDup||isRej?'dup':''}"><td>${(ch.n||'').substring(0,18)}</td><td>${(ch.u||'').replace('https://t.me/','@').substring(0,18)}</td><td>${fmtS(ch.s)}</td><td>${isRej?'<span class="db2">отказ</span>':isDup?'<span class="db2">дубль</span>':'<span class="nb">новый</span>'}</td></tr>`
+    }).join('')+'</tbody>';
+  const btn=document.getElementById('CIB');btn.textContent=`✅ Добавить ${newOnes.length} каналов`;btn.disabled=newOnes.length===0;
+  om('PM');
+}
+
+async function doImport(){
+  if(!pending.length)return;
+  const btn=document.getElementById('CIB');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Сохраняю...';
+  const CHUNK=500;
+  for(let i=0;i<pending.length;i+=CHUNK){
+    await dbPutMany('channels',pending.slice(i,i+CHUNK));
+    btn.textContent=`Сохранено ${Math.min(i+CHUNK,pending.length)} из ${pending.length}...`;
+    await new Promise(r=>setTimeout(r,10));
+  }
+  allChannels.push(...pending);cm('PM');rc();rDBS();toast(`✅ Добавлено ${pending.length} каналов`);pending=[];
+}
+
+// ═══ DB STATS ═══
+function rDBS(){
+  const t=allChannels.length;const m=allChannels.filter(c=>c.src==='вручную').length;
+  const f=allChannels.filter(c=>c.src&&c.src!=='вручную'&&c.src!=='builtin').length;
+  const rj=Object.values(ST.cs).filter(v=>v==='rejected').length;
+  document.getElementById('DBS').innerHTML=[
+    ['📊','Всего каналов',t,'var(--accent)'],['✏️','Вручную',m,'var(--muted)'],
+    ['📂','Из файлов',f,'var(--accent2)'],['🚫','Отказались',rj,'var(--red)']
+  ].map(([i,l,v,c])=>`<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:18px;margin-bottom:4px">${i}</div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${c}">${v}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${l}</div></div>`).join('');
+  document.getElementById('CCN').textContent=t;
+}
+function askClear(){om('CCM')}
+async function doClear(){await dbClear('channels');allChannels=[];rc();rDBS();cm('CCM');toast('🗑 База очищена')}
+
+// ═══ CONNECT ═══
+function ucr(){const l=document.getElementById('cL').value.trim(),i=document.getElementById('cI').value.trim(),s=document.getElementById('cS').value,r=document.getElementById('cR').value;if(!l&&!i){document.getElementById('CR').textContent='— заполни поля выше —';return}document.getElementById('CR').textContent=`${l||'[ссылка]'}\n${i||'[id]'}\n${s||'[челендж]'}\n${r}`}
+function copyCR(){const t=document.getElementById('CR').textContent;if(t.includes('заполни')){toast('⚠️ Заполни поля!');return}cp(t)}
+function clrC(){['cL','cI'].forEach(id=>document.getElementById(id).value='');document.getElementById('cS').value='';document.getElementById('cR').value='25%';ucr()}
+</script>
+</body>
+</html>
