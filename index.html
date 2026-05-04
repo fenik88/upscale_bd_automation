@@ -18,7 +18,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .cloud-btn:active{transform:scale(.95)}
 .cloud-btn.save{border-color:rgba(124,92,252,.4);color:var(--accent)}
 .cloud-btn.load{border-color:rgba(0,229,176,.4);color:var(--accent2)}
-.cloud-btn.syncing{opacity:.6;pointer-events:none}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .sync-dot.ok{background:var(--green)}
 .sync-dot.err{background:var(--red)}
@@ -144,14 +143,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <div class="topbar">
     <h1>Up<span>Scale</span> BD</h1>
     <div class="cloud-btns">
-      <div class="sync-dot" id="syncDot" title="Статус облака"></div>
+      <div class="sync-dot" id="syncDot"></div>
       <button class="cloud-btn save" onclick="cloudSave()">☁️ Сохранить</button>
       <button class="cloud-btn load" onclick="cloudLoad()">📥 Загрузить</button>
     </div>
   </div>
   <div class="content">
 
-    <!-- DASHBOARD -->
     <div class="page active" id="page-dash">
       <div class="dash-header"><div class="dash-sub">Привет 👋 Сегодня:</div><div class="dash-date" id="DD"></div></div>
       <div class="stats-row">
@@ -172,7 +170,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
         <button class="btn btn-s" style="margin-top:8px" onclick="cp('https://app.bookflow.sh?ref=214UO')">📋 Скопировать</button></div>
     </div>
 
-    <!-- БАЗА -->
     <div class="page" id="page-outreach">
       <div class="sbar">
         <input type="text" id="SI" placeholder="🔍 Поиск..." oninput="rc()">
@@ -191,19 +188,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       <div class="clist" id="CL"></div>
     </div>
 
-    <!-- ИМПОРТ -->
     <div class="page" id="page-import">
       <div class="ph"><h2>База каналов</h2><p>Импорт и управление</p></div>
-
-      <!-- CLOUD INFO -->
       <div class="cloud-info">
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">☁️ Облачное хранилище</div>
-        <div class="cloud-info-row"><span class="cloud-info-label">Последнее сохранение</span><span class="cloud-info-val" id="lastSaveTime">—</span></div>
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">☁️ Облачное хранилище (умный мерж)</div>
+        <div class="cloud-info-row"><span class="cloud-info-label">Последняя синхронизация</span><span class="cloud-info-val" id="lastSaveTime">—</span></div>
         <div class="cloud-info-row"><span class="cloud-info-label">Каналов в облаке</span><span class="cloud-info-val" id="cloudChCount">—</span></div>
         <div class="cloud-info-row"><span class="cloud-info-label">Статусов в облаке</span><span class="cloud-info-val" id="cloudStCount">—</span></div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn btn-p" style="flex:1" onclick="cloudSave()">☁️ Сохранить всё</button>
-          <button class="btn btn-s" style="flex:1" onclick="cloudLoad()">📥 Загрузить</button>
+        <div style="font-size:11px;color:var(--muted);margin:8px 0;line-height:1.5">При загрузке данные объединяются — ничего не теряется, побеждает более новая версия каждого канала</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn btn-p" style="flex:1" onclick="cloudSave()">☁️ Сохранить</button>
+          <button class="btn btn-s" style="flex:1" onclick="cloudLoad()">📥 Загрузить и смержить</button>
         </div>
         <div id="cloudStatus" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;display:none"></div>
       </div>
@@ -212,10 +207,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
         <div class="isec-h"><div class="isec-ico" style="background:rgba(34,197,94,.15)">📊</div>
           <div><div class="isec-t">Загрузить Excel (.xlsx)</div><div class="isec-s">Любой размер — хоть 100 000 строк</div></div></div>
         <div class="isec-b">
-          <div class="drop" id="FD">
-            <input type="file" accept=".xlsx,.xls,.csv" id="FI" onchange="handleFile(event)">
+          <div class="drop"><input type="file" accept=".xlsx,.xls,.csv" id="FI" onchange="handleFile(event)">
             <div style="font-size:28px;margin-bottom:8px">📂</div>
-            <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text);display:block;margin-bottom:4px">Нажми чтобы выбрать файл</strong>.xlsx / .csv — любой размер</div>
+            <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text);display:block;margin-bottom:4px">Нажми чтобы выбрать файл</strong>.xlsx / .csv</div>
           </div>
           <div id="FP" style="margin-top:10px;display:none">
             <div class="prog-wrap"><div class="prog-bar" id="PB"></div></div>
@@ -225,7 +219,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       </div>
       <div class="isec">
         <div class="isec-h"><div class="isec-ico" style="background:rgba(0,229,176,.15)">🟢</div>
-          <div><div class="isec-t">Google Таблицы</div><div class="isec-s">Публичная ссылка (открыт для всех)</div></div></div>
+          <div><div class="isec-t">Google Таблицы</div><div class="isec-s">Публичная ссылка</div></div></div>
         <div class="isec-b">
           <input class="gsinp" type="text" id="GU" placeholder="https://docs.google.com/spreadsheets/d/...">
           <div id="GS" style="font-size:12px;margin-bottom:8px;display:none"></div>
@@ -250,7 +244,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       </div>
     </div>
 
-    <!-- ПОДКЛЮЧИТЬ -->
     <div class="page" id="page-connect">
       <div class="ph"><h2>Подключить инфла</h2><p>Генератор сообщения для босса</p></div>
       <div style="padding:16px">
@@ -281,7 +274,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       </div>
     </div>
 
-    <!-- CRM -->
     <div class="page" id="page-crm">
       <div class="ph"><h2>Мои инфлы</h2><p>Активные и онбординг</p></div>
       <div id="CRML" style="padding:0 16px 0"></div>
@@ -309,7 +301,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   </nav>
 </div>
 
-<!-- CHANNEL MODAL -->
 <div class="mo" id="CM"><div class="modal">
   <div class="mh"></div><div class="mt" id="CMT"></div>
   <div id="CMI"></div>
@@ -333,21 +324,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   </div>
 </div></div>
 
-<!-- IMPORT PREVIEW MODAL -->
 <div class="mo" id="PM"><div class="modal">
   <div class="mh"></div><div class="mt" id="PMT">Предпросмотр импорта</div>
   <div class="isum" id="PSUM"></div>
   <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Превью (первые 20)</div>
-  <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
-    <table class="ptbl" id="PTBL"></table>
-  </div>
+  <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)"><table class="ptbl" id="PTBL"></table></div>
   <div class="abtns" style="margin-top:16px">
     <button class="btn btn-g" id="CIB" onclick="doImport()">✅ Добавить новые каналы</button>
     <button class="btn btn-s" onclick="cm('PM')">Отмена</button>
   </div>
 </div></div>
 
-<!-- CONFIRM CLEAR -->
 <div class="mo" id="CCM"><div class="modal">
   <div class="mh"></div><div class="mt">⚠️ Очистить базу?</div>
   <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">Удалит все <strong id="CCN" style="color:var(--text)">0</strong> каналов. Статусы и заметки сохранятся.</p>
@@ -357,7 +344,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   </div>
 </div></div>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDK — умный мерж -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -370,119 +357,141 @@ const firebaseConfig = {
   messagingSenderId: "1020951500539",
   appId: "1:1020951500539:web:4796afcae233fc4386025e"
 };
-
 const fbApp = initializeApp(firebaseConfig);
 const fsdb = getFirestore(fbApp);
 
-// ─── CLOUD SAVE ───
+// ─── SAVE: отправляем только новые каналы (после lastSyncAt) + meta целиком ───
 window.cloudSave = async function() {
   setSyncStatus('pulse');
   setCloudStatus('<span class="spin"></span> Сохраняю в облако...');
   try {
     const meta = JSON.parse(localStorage.getItem('bdmeta') || '{}');
     const savedAt = new Date().toISOString();
+    const lastSync = parseInt(localStorage.getItem('lastSyncAt') || '0');
 
-    // 1. Save meta (statuses, notes, stats) — one document
+    // Meta (statuses, notes, stats) — маленькая, всегда целиком
     await setDoc(doc(fsdb, 'upscale', 'meta'), {
-      cs: meta.cs || {},
-      cn: meta.cn || {},
-      stats: meta.stats || {},
-      savedAt
+      cs: meta.cs || {}, cn: meta.cn || {}, stats: meta.stats || {}, savedAt
     });
 
-    // 2. Save channels in batches of 400 (Firestore limit = 500 per batch)
-    const CHUNK = 400;
-    let total = 0;
-    for (let i = 0; i < allChannels.length; i += CHUNK) {
-      const batch = writeBatch(fsdb);
-      const slice = allChannels.slice(i, i + CHUNK);
-      slice.forEach(ch => {
-        const key = ukey(ch.u).replace(/[^a-z0-9_\-]/g, '_').substring(0, 100);
-        batch.set(doc(fsdb, 'channels', key || `ch_${i}_${total}`), ch);
-      });
-      await batch.commit();
-      total += slice.length;
-      setCloudStatus(`Сохранено ${total} из ${allChannels.length} каналов...`);
+    // Каналы — только добавленные после последней синхронизации
+    const toUpload = lastSync === 0 ? allChannels : allChannels.filter(ch => (ch.addedAt || 0) > lastSync);
+    if (toUpload.length > 0) {
+      const CHUNK = 400; let total = 0;
+      for (let i = 0; i < toUpload.length; i += CHUNK) {
+        const batch = writeBatch(fsdb);
+        toUpload.slice(i, i + CHUNK).forEach(ch => {
+          const key = ukey(ch.u).replace(/[^a-z0-9_\-]/g, '_').substring(0, 100);
+          batch.set(doc(fsdb, 'channels', key || 'ch_' + i), ch);
+        });
+        await batch.commit();
+        total += Math.min(CHUNK, toUpload.length - i);
+        setCloudStatus(`Отправлено ${total} из ${toUpload.length}...`);
+      }
     }
 
-    // Update cloud info display
+    const syncTs = Date.now();
+    localStorage.setItem('lastSyncAt', syncTs.toString());
     localStorage.setItem('lastCloudSave', savedAt);
     updateCloudInfo(savedAt, allChannels.length, Object.keys(meta.cs || {}).length);
-    setSyncStatus('ok');
-    setCloudStatus('');
-    toast('☁️ Сохранено в облако!');
+    setSyncStatus('ok'); setCloudStatus('');
+    toast(lastSync === 0 ? `☁️ Сохранено: ${toUpload.length} каналов` : `☁️ Синхронизировано: +${toUpload.length} новых`);
   } catch(err) {
-    console.error(err);
-    setSyncStatus('err');
-    setCloudStatus('❌ Ошибка: ' + err.message);
-    toast('❌ Ошибка сохранения');
+    console.error(err); setSyncStatus('err');
+    setCloudStatus('❌ Ошибка: ' + err.message); toast('❌ Ошибка сохранения');
   }
 };
 
-// ─── CLOUD LOAD ───
+// ─── LOAD: умный мерж — побеждает более новый, ничего не теряется ───
 window.cloudLoad = async function() {
   setSyncStatus('pulse');
   setCloudStatus('<span class="spin"></span> Загружаю из облака...');
   try {
-    // 1. Load meta
     const metaSnap = await getDoc(doc(fsdb, 'upscale', 'meta'));
     if (!metaSnap.exists()) {
-      setSyncStatus('err');
-      setCloudStatus('❌ В облаке нет данных — сначала сохрани');
-      toast('❌ В облаке пусто');
-      return;
+      setSyncStatus('err'); setCloudStatus('❌ В облаке нет данных — сначала сохрани'); toast('❌ В облаке пусто'); return;
     }
     const cloudMeta = metaSnap.data();
 
-    // 2. Load channels
     setCloudStatus('<span class="spin"></span> Загружаю каналы...');
     const chSnap = await getDocs(collection(fsdb, 'channels'));
-    const cloudChannels = [];
-    chSnap.forEach(d => cloudChannels.push(d.data()));
+    const cloudChannels = []; chSnap.forEach(d => cloudChannels.push(d.data()));
 
-    // 3. Save to IndexedDB
+    // Мерж каналов: все уникальные, при дубле побеждает более новый addedAt
+    const localMap = new Map(allChannels.map(ch => [ukey(ch.u), ch]));
+    const cloudMap = new Map(cloudChannels.map(ch => [ukey(ch.u), ch]));
+    const allKeys = new Set([...localMap.keys(), ...cloudMap.keys()]);
+    const merged = [];
+    for (const k of allKeys) {
+      const loc = localMap.get(k); const cld = cloudMap.get(k);
+      if (!loc) { merged.push(cld); continue; }
+      if (!cld) { merged.push(loc); continue; }
+      merged.push((cld.addedAt || 0) >= (loc.addedAt || 0) ? cld : loc);
+    }
+
+    // Мерж статусов: облако новее lastSyncAt → берём облако
+    const localMeta = JSON.parse(localStorage.getItem('bdmeta') || '{}');
+    const localSyncAt = parseInt(localStorage.getItem('lastSyncAt') || '0');
+    const cloudSavedAt = new Date(cloudMeta.savedAt || 0).getTime();
+    const localCs = localMeta.cs || {};
+    const cloudCs = cloudMeta.cs || {};
+    const mergedCs = { ...localCs };
+    for (const [k, v] of Object.entries(cloudCs)) {
+      if (!localCs[k] || cloudSavedAt > localSyncAt) mergedCs[k] = v;
+    }
+
+    // Мерж заметок: берём непустые, приоритет облаку
+    const localCn = localMeta.cn || {};
+    const cloudCn = cloudMeta.cn || {};
+    const mergedCn = { ...localCn };
+    for (const [k, v] of Object.entries(cloudCn)) { if (v && !localCn[k]) mergedCn[k] = v; }
+
+    // Мерж статистики: максимум по каждому дню
+    const localStats = localMeta.stats || {};
+    const cloudStats = cloudMeta.stats || {};
+    const mergedStats = { ...localStats };
+    for (const [day, cs] of Object.entries(cloudStats)) {
+      if (!mergedStats[day]) { mergedStats[day] = cs; }
+      else { mergedStats[day] = { outreach: Math.max(mergedStats[day].outreach||0, cs.outreach||0), onboard: Math.max(mergedStats[day].onboard||0, cs.onboard||0), active: Math.max(mergedStats[day].active||0, cs.active||0) }; }
+    }
+
+    // Сохраняем
+    setCloudStatus(`Сохраняю ${merged.length} каналов...`);
     await dbClear('channels');
     const CHUNK = 500;
-    for (let i = 0; i < cloudChannels.length; i += CHUNK) {
-      await dbPutMany('channels', cloudChannels.slice(i, i + CHUNK));
-      setCloudStatus(`Загружено ${Math.min(i+CHUNK, cloudChannels.length)} из ${cloudChannels.length}...`);
-    }
-    allChannels = cloudChannels;
+    for (let i = 0; i < merged.length; i += CHUNK) await dbPutMany('channels', merged.slice(i, i + CHUNK));
+    allChannels = merged;
 
-    // 4. Restore meta
-    const newMeta = { cs: cloudMeta.cs || {}, cn: cloudMeta.cn || {}, stats: cloudMeta.stats || {} };
+    const newMeta = { cs: mergedCs, cn: mergedCn, stats: mergedStats };
     localStorage.setItem('bdmeta', JSON.stringify(newMeta));
-    ST.cs = newMeta.cs; ST.cn = newMeta.cn; ST.stats = newMeta.stats;
+    ST.cs = mergedCs; ST.cn = mergedCn; ST.stats = mergedStats;
 
-    updateCloudInfo(cloudMeta.savedAt, cloudChannels.length, Object.keys(cloudMeta.cs || {}).length);
-    setSyncStatus('ok');
-    setCloudStatus('');
+    localStorage.setItem('lastSyncAt', Date.now().toString());
+    localStorage.setItem('lastCloudSave', cloudMeta.savedAt);
+    updateCloudInfo(cloudMeta.savedAt, merged.length, Object.keys(mergedCs).length);
+    setSyncStatus('ok'); setCloudStatus('');
     rc(); rCRM(); rDBS(); updDash();
-    toast(`📥 Загружено: ${cloudChannels.length} каналов`);
+    const newFromCloud = cloudChannels.filter(ch => !localMap.has(ukey(ch.u))).length;
+    toast(`📥 Мерж готов: ${merged.length} каналов (+${newFromCloud} из облака)`);
   } catch(err) {
-    console.error(err);
-    setSyncStatus('err');
-    setCloudStatus('❌ Ошибка: ' + err.message);
-    toast('❌ Ошибка загрузки');
+    console.error(err); setSyncStatus('err');
+    setCloudStatus('❌ Ошибка: ' + err.message); toast('❌ Ошибка загрузки');
   }
 };
 
 window.updateCloudInfo = function(savedAt, chCount, stCount) {
   if (savedAt) {
     const d = new Date(savedAt);
-    document.getElementById('lastSaveTime').textContent =
-      d.toLocaleDateString('ru') + ' ' + d.toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastSaveTime').textContent = d.toLocaleDateString('ru') + ' ' + d.toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
   }
   if (chCount !== undefined) document.getElementById('cloudChCount').textContent = chCount;
   if (stCount !== undefined) document.getElementById('cloudStCount').textContent = stCount;
 };
 
-// Restore last save time from localStorage on load
 window.addEventListener('DOMContentLoaded', () => {
   const last = localStorage.getItem('lastCloudSave');
   if (last) updateCloudInfo(last);
 });
-
 </script>
 
 <script>
@@ -494,17 +503,12 @@ function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(
 function dbPutMany(store,items){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const os=tx.objectStore(store);let i=0;function next(){if(i>=items.length){res();return}const r=os.put(items[i++]);r.onsuccess=next;r.onerror=rej}next()})}
 function dbClear(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const r=tx.objectStore(store).clear();r.onsuccess=res;r.onerror=rej})}
 
-// ═══ STATE ═══
 let ST=JSON.parse(localStorage.getItem('bdmeta')||'{}');
-if(!ST.cs)ST.cs={};
-if(!ST.cn)ST.cn={};
-if(!ST.stats)ST.stats={};
+if(!ST.cs)ST.cs={};if(!ST.cn)ST.cn={};if(!ST.stats)ST.stats={};
 function saveMeta(){localStorage.setItem('bdmeta',JSON.stringify(ST))}
-
 let allChannels=[],viewChannels=[],CK=null,pending=[];
 let FS={size:false,open:false,new:false,notcontacted:false,wascontacted:false,showrejected:false};
 
-// ═══ UTILS ═══
 function ukey(u){return(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^t\.me\//,'').replace(/^telegram\.me\//,'').replace(/\/+$/,'')}
 function fmtS(n){n=parseInt(n)||0;return n>=1e6?(n/1e6).toFixed(1)+'М':n>=1000?Math.round(n/1000)+'к':n||'—'}
 function chal(s){s=parseInt(s)||0;return s>=500000?'50k ⚠️':s>=200000?'25k':s>=50000?'10k':'5k'}
@@ -515,16 +519,12 @@ function om(id){document.getElementById(id).classList.add('open')}
 function cp(t){if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('📋 Скопировано!'))}else{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('📋 Скопировано!')}}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2700)}
 function setProgress(pct,txt){document.getElementById('PB').style.width=pct+'%';document.getElementById('PT2').textContent=txt}
-function setSyncStatus(s){const d=document.getElementById('syncDot');d.className='sync-dot'+(s?' '+s:'')}
+function setSyncStatus(s){document.getElementById('syncDot').className='sync-dot'+(s?' '+s:'')}
 function setCloudStatus(html){const el=document.getElementById('cloudStatus');if(el){el.style.display=html?'block':'none';el.innerHTML=html}}
 
-// ═══ INIT ═══
 window.addEventListener('DOMContentLoaded',async()=>{
-  await openDB();
-  allChannels=await dbGetAll('channels');
-  const now=new Date();
-  const days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-  const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  await openDB();allChannels=await dbGetAll('channels');
+  const now=new Date();const days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
   document.getElementById('DD').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
   updDash();rc();rCRM();rDBS();
   ['CM','PM','CCM'].forEach(id=>document.getElementById(id).addEventListener('click',function(e){if(e.target===this)cm(id)}));
@@ -537,7 +537,6 @@ function sw(tab,btn){
   if(tab==='dash')updDash();if(tab==='crm')rCRM();if(tab==='import')rDBS();if(tab==='outreach')rc();
 }
 
-// ═══ DASHBOARD ═══
 function updDash(){const s=es();document.getElementById('sO').textContent=s.outreach;document.getElementById('sN').textContent=s.onboard;document.getElementById('sA').textContent=s.active;document.getElementById('RP').textContent=`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`}
 function copyReport(){const s=es();cp(`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`)}
 const TMPL={
@@ -547,7 +546,6 @@ const TMPL={
 };
 function copyT(t){cp(TMPL[t])}
 
-// ═══ CHANNELS ═══
 let renderLimit=50;
 function rc(){
   let chs=[...allChannels];
@@ -556,24 +554,17 @@ function rc(){
   if(FS.size)chs=chs.filter(c=>(parseInt(c.s)||0)>=500000);
   if(FS.open)chs=chs.filter(c=>c.c==='Открыты');
   if(FS.new)chs=chs.filter(c=>c.src!=='builtin');
-  if(FS.showrejected){
-    chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')==='rejected');
-  }else{
-    chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')!=='rejected');
-    if(FS.notcontacted)chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')==='none');
-    if(FS.wascontacted)chs=chs.filter(c=>['contacted','onboarding','active'].includes(ST.cs[ukey(c.u)]||'none'));
-  }
+  if(FS.showrejected){chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')==='rejected');}
+  else{chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')!=='rejected');if(FS.notcontacted)chs=chs.filter(c=>(ST.cs[ukey(c.u)]||'none')==='none');if(FS.wascontacted)chs=chs.filter(c=>['contacted','onboarding','active'].includes(ST.cs[ukey(c.u)]||'none'));}
   viewChannels=chs;renderLimit=50;
   document.getElementById('DBC').textContent=`Показано: ${Math.min(renderLimit,chs.length)} из ${chs.length} (всего: ${allChannels.length})`;
   renderList();
 }
 function renderList(){
-  const chs=viewChannels.slice(0,renderLimit);
-  const list=document.getElementById('CL');
+  const chs=viewChannels.slice(0,renderLimit);const list=document.getElementById('CL');
   if(!chs.length){list.innerHTML=allChannels.length===0?'<div class="empty">База пуста 📭<br><br>Загрузи файл во вкладке <strong>Импорт</strong><br>или нажми 📥 Загрузить если уже сохранял в облако</div>':'<div class="empty">Ничего не найдено 🔍</div>';return}
   list.innerHTML=chs.map(ch=>{
-    const k=ukey(ch.u);const st=ST.cs[k]||'none';
-    const s=parseInt(ch.s)||0;
+    const k=ukey(ch.u);const st=ST.cs[k]||'none';const s=parseInt(ch.s)||0;
     const sz=s>=500000?'big':s>=50000?'med':'small';
     const stag=sz==='big'?`<span class="stag sb">Крупный</span>`:sz==='med'?`<span class="stag sm">Средний</span>`:`<span class="stag ss">Малый</span>`;
     const src=ch.src&&ch.src!=='builtin'?`<span class="srctag">${ch.src}</span>`:'';
@@ -584,41 +575,25 @@ function renderList(){
       <div class="cr2"><span class="cl">${(ch.u||'').replace('https://t.me/','@')}</span>${ch.c?`<span class="cco ${ch.c==='Открыты'?'op':'cl2'}">${ch.c}</span>`:''}${src}</div>
     </div>`;
   }).join('');
-  if(viewChannels.length>renderLimit){
-    const more=document.createElement('button');
-    more.className='btn btn-s';more.style.marginBottom='16px';
-    more.textContent=`Показать ещё (${viewChannels.length-renderLimit} каналов)`;
-    more.onclick=()=>{renderLimit+=100;document.getElementById('DBC').textContent=`Показано: ${Math.min(renderLimit,viewChannels.length)} из ${viewChannels.length} (всего: ${allChannels.length})`;renderList()};
-    list.appendChild(more);
-  }
+  if(viewChannels.length>renderLimit){const more=document.createElement('button');more.className='btn btn-s';more.style.marginBottom='16px';more.textContent=`Показать ещё (${viewChannels.length-renderLimit} каналов)`;more.onclick=()=>{renderLimit+=100;document.getElementById('DBC').textContent=`Показано: ${Math.min(renderLimit,viewChannels.length)} из ${viewChannels.length} (всего: ${allChannels.length})`;renderList()};list.appendChild(more);}
 }
 function tf(t){
-  if(['notcontacted','wascontacted','showrejected'].includes(t)){
-    ['notcontacted','wascontacted','showrejected'].forEach(k=>{if(k!==t&&FS[k]){FS[k]=false;document.getElementById({notcontacted:'fNC',wascontacted:'fWC',showrejected:'fRJ'}[k]).classList.remove('on')}});
-  }
-  FS[t]=!FS[t];
-  document.getElementById({size:'fS',open:'fO',new:'fN',notcontacted:'fNC',wascontacted:'fWC',showrejected:'fRJ'}[t]).classList.toggle('on',FS[t]);
-  rc();
+  if(['notcontacted','wascontacted','showrejected'].includes(t)){['notcontacted','wascontacted','showrejected'].forEach(k=>{if(k!==t&&FS[k]){FS[k]=false;document.getElementById({notcontacted:'fNC',wascontacted:'fWC',showrejected:'fRJ'}[k]).classList.remove('on')}});}
+  FS[t]=!FS[t];document.getElementById({size:'fS',open:'fO',new:'fN',notcontacted:'fNC',wascontacted:'fWC',showrejected:'fRJ'}[t]).classList.toggle('on',FS[t]);rc();
 }
 
-// ═══ CHANNEL MODAL ═══
 function oCh(k){
   CK=k;const ch=allChannels.find(c=>ukey(c.u)===k);if(!ch)return;
   const st=ST.cs[k]||'none';
   document.getElementById('CMT').textContent=ch.n||ch.u;
   document.getElementById('CMI').innerHTML=[['Подписчики',fmtS(ch.s)],['Ссылка',(ch.u||'').replace('https://t.me/','@')],['Комментарии',ch.c||'—'],['Рек. челендж',chal(ch.s)]].map(([l,v])=>`<div class="ir"><span class="il">${l}</span><span class="iv">${v}</span></div>`).join('');
   document.querySelectorAll('#CM .chip').forEach(c=>{c.classList.remove('a','ay','ag','ar')});
-  const sm={none:0,contacted:1,onboarding:2,active:3,rejected:4};
-  const chips=document.querySelectorAll('#CM .chip');
+  const sm={none:0,contacted:1,onboarding:2,active:3,rejected:4};const chips=document.querySelectorAll('#CM .chip');
   const ci=sm[st];if(ci!==undefined){const chip=chips[ci];const cc=chip.dataset.c;chip.classList.add(cc==='y'?'ay':cc==='g'?'ag':cc==='r'?'ar':'a')}
   document.getElementById('CN').value=ST.cn[k]||'';
   document.getElementById('OTG').onclick=(e)=>{
-    e.preventDefault();
-    const domain=(ch.u.replace(/^https?:\/\/t\.me\//,'')).toLowerCase().split('/')[0];
-    const iframe=document.createElement('iframe');
-    iframe.style.cssText='position:fixed;opacity:0;width:1px;height:1px;border:none';
-    document.body.appendChild(iframe);
-    iframe.src='tg://resolve?domain='+domain;
+    e.preventDefault();const domain=(ch.u.replace(/^https?:\/\/t\.me\//,'')).toLowerCase().split('/')[0];
+    const iframe=document.createElement('iframe');iframe.style.cssText='position:fixed;opacity:0;width:1px;height:1px;border:none';document.body.appendChild(iframe);iframe.src='tg://resolve?domain='+domain;
     const fallback=setTimeout(()=>{try{document.body.removeChild(iframe)}catch(e){}window.open(ch.u,'_blank')},800);
     window.addEventListener('blur',function onBlur(){clearTimeout(fallback);try{document.body.removeChild(iframe)}catch(e){}window.removeEventListener('blur',onBlur)});
   };
@@ -631,19 +606,15 @@ function setSt(el,st){
 }
 function saveCh(){if(CK){ST.cn[CK]=document.getElementById('CN').value;saveMeta()}cm('CM');rc();toast('✅ Сохранено')}
 
-// ═══ CRM ═══
 function rCRM(){
-  const lb={contacted:'Написали',onboarding:'Онбординг',active:'Актив'};
-  const cl={contacted:'var(--yellow)',onboarding:'var(--accent)',active:'var(--green)'};
+  const lb={contacted:'Написали',onboarding:'Онбординг',active:'Актив'};const cl={contacted:'var(--yellow)',onboarding:'var(--accent)',active:'var(--green)'};
   const entries=Object.entries(ST.cs).filter(([,v])=>v!=='none'&&v!=='rejected').map(([k,st])=>({k,st,ch:allChannels.find(c=>ukey(c.u)===k)})).filter(e=>e.ch);
   const L=document.getElementById('CRML');
   if(!entries.length){L.innerHTML='<div class="empty" style="padding-bottom:8px">Пока нет активных инфлов<br>Начни аутрич во вкладке База 🚀</div>';}
   else{L.innerHTML=entries.map(({k,st,ch})=>{const nt=ST.cn[k]||'';const c=cl[st]||'var(--muted)';
-    return `<div class="cc" onclick="oCh('${k}')" style="border-left:3px solid ${c}">
-      <div class="cr1"><div class="cn">${ch.n||ch.u}</div><div class="cs" style="background:${c}22;color:${c}">${lb[st]||st}</div></div>
+    return `<div class="cc" onclick="oCh('${k}')" style="border-left:3px solid ${c}"><div class="cr1"><div class="cn">${ch.n||ch.u}</div><div class="cs" style="background:${c}22;color:${c}">${lb[st]||st}</div></div>
       <div class="cr2"><span class="cl">${(ch.u||'').replace('https://t.me/','@')}</span><span style="font-size:11px;color:var(--muted)">${fmtS(ch.s)} подп.</span></div>
-      ${nt?`<div style="font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${nt.substring(0,80)}${nt.length>80?'...':''}</div>`:''}
-    </div>`}).join('');}
+      ${nt?`<div style="font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${nt.substring(0,80)}${nt.length>80?'...':''}</div>`:''}</div>`}).join('');}
   const rjEntries=Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>({k,ch:allChannels.find(c=>ukey(c.u)===k)})).filter(e=>e.ch);
   const RL=document.getElementById('RJLIST');
   if(!rjEntries.length){RL.innerHTML='<div style="font-size:13px;color:var(--muted);padding:4px 0 8px">Список пуст</div>';return}
@@ -655,224 +626,94 @@ function rCRM(){
 }
 function unReject(k){ST.cs[k]='none';saveMeta();rCRM();rc();toast('↩️ Возвращён в базу')}
 
-// ═══ MANUAL ADD ═══
 function valM(){const v=document.getElementById('MU').value.trim();const e2=document.getElementById('ME');const b=document.getElementById('MAB');if(!v){e2.style.display='none';b.disabled=true;return}const ok=v.includes('t.me')||v.includes('telegram')||v.startsWith('@')||v.startsWith('http');e2.style.display=ok?'none':'block';e2.textContent='Введи ссылку вида https://t.me/channel или @channel';b.disabled=!ok}
 async function addManual(){
-  let u=document.getElementById('MU').value.trim();
-  if(u.startsWith('@'))u='https://t.me/'+u.slice(1);
-  if(!u.startsWith('http'))u='https://'+u;
-  const k=ukey(u);
-  if(allChannels.some(c=>ukey(c.u)===k)){toast('⚠️ Уже есть в базе');return}
+  let u=document.getElementById('MU').value.trim();if(u.startsWith('@'))u='https://t.me/'+u.slice(1);if(!u.startsWith('http'))u='https://'+u;
+  const k=ukey(u);if(allChannels.some(c=>ukey(c.u)===k)){toast('⚠️ Уже есть в базе');return}
   const ch={n:u.replace('https://t.me/','@'),u,s:0,c:'',src:'вручную',addedAt:Date.now()};
-  await dbPutMany('channels',[ch]);allChannels.push(ch);rc();rDBS();
-  document.getElementById('MU').value='';document.getElementById('MAB').disabled=true;toast('✅ Канал добавлен');
+  await dbPutMany('channels',[ch]);allChannels.push(ch);rc();rDBS();document.getElementById('MU').value='';document.getElementById('MAB').disabled=true;toast('✅ Канал добавлен');
 }
 
-// ═══ XLSX PARSER ═══
 function colIdx(letters){let n=0;for(const c of letters)n=n*26+(c.charCodeAt(0)-64);return n-1}
 function decXML(s){return(s||'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'")}
 
 async function unzip(bytes){
-  const files={};
-  const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
-  let eocd=-1;
-  for(let i=bytes.length-22;i>=Math.max(0,bytes.length-65536);i--){
-    if(bytes[i]===0x50&&bytes[i+1]===0x4B&&bytes[i+2]===0x05&&bytes[i+3]===0x06){eocd=i;break}
-  }
+  const files={};const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);let eocd=-1;
+  for(let i=bytes.length-22;i>=Math.max(0,bytes.length-65536);i--){if(bytes[i]===0x50&&bytes[i+1]===0x4B&&bytes[i+2]===0x05&&bytes[i+3]===0x06){eocd=i;break}}
   if(eocd<0)return files;
-  const cdOffset=dv.getUint32(eocd+16,true);const cdSize=dv.getUint32(eocd+12,true);
-  const entries=[];let ci=cdOffset;
+  const cdOffset=dv.getUint32(eocd+16,true);const cdSize=dv.getUint32(eocd+12,true);const entries=[];let ci=cdOffset;
   while(ci<cdOffset+cdSize&&ci+46<=bytes.length){
     if(bytes[ci]!==0x50||bytes[ci+1]!==0x4B||bytes[ci+2]!==0x01||bytes[ci+3]!==0x02)break;
-    const comp=dv.getUint16(ci+10,true);const compSize=dv.getUint32(ci+20,true);
-    const fnLen=dv.getUint16(ci+28,true);const extraLen=dv.getUint16(ci+30,true);
-    const commentLen=dv.getUint16(ci+32,true);const localOffset=dv.getUint32(ci+42,true);
-    const fname=new TextDecoder().decode(bytes.slice(ci+46,ci+46+fnLen));
-    entries.push({fname,comp,compSize,localOffset});
-    ci+=46+fnLen+extraLen+commentLen;
+    const comp=dv.getUint16(ci+10,true);const compSize=dv.getUint32(ci+20,true);const fnLen=dv.getUint16(ci+28,true);const extraLen=dv.getUint16(ci+30,true);const commentLen=dv.getUint16(ci+32,true);const localOffset=dv.getUint32(ci+42,true);
+    const fname=new TextDecoder().decode(bytes.slice(ci+46,ci+46+fnLen));entries.push({fname,comp,compSize,localOffset});ci+=46+fnLen+extraLen+commentLen;
   }
   for(const e of entries){
-    if(e.compSize===0)continue;
-    const li=e.localOffset;
-    const fnLen2=dv.getUint16(li+26,true);const extraLen2=dv.getUint16(li+28,true);
-    const dataStart=li+30+fnLen2+extraLen2;
-    const compData=bytes.slice(dataStart,dataStart+e.compSize);
-    if(e.comp===8){
-      try{
-        const ds=new DecompressionStream('deflate-raw');
-        const w=ds.writable.getWriter();const r=ds.readable.getReader();
-        w.write(compData);w.close();
-        const chunks=[];let total=0;
-        while(true){const{done,value}=await r.read();if(done)break;chunks.push(value);total+=value.length}
-        const out=new Uint8Array(total);let off=0;for(const c of chunks){out.set(c,off);off+=c.length}
-        files[e.fname]=out;
-      }catch(err){console.warn('unzip:',e.fname,err)}
-    }else if(e.comp===0){files[e.fname]=bytes.slice(dataStart,dataStart+e.compSize)}
+    if(e.compSize===0)continue;const li=e.localOffset;const fnLen2=dv.getUint16(li+26,true);const extraLen2=dv.getUint16(li+28,true);const dataStart=li+30+fnLen2+extraLen2;const compData=bytes.slice(dataStart,dataStart+e.compSize);
+    if(e.comp===8){try{const ds=new DecompressionStream('deflate-raw');const w=ds.writable.getWriter();const r=ds.readable.getReader();w.write(compData);w.close();const chunks=[];let total=0;while(true){const{done,value}=await r.read();if(done)break;chunks.push(value);total+=value.length}const out=new Uint8Array(total);let off=0;for(const c of chunks){out.set(c,off);off+=c.length}files[e.fname]=out;}catch(err){console.warn('unzip:',e.fname,err)}}
+    else if(e.comp===0){files[e.fname]=bytes.slice(dataStart,dataStart+e.compSize)}
   }
   return files;
 }
 
 async function parseXLSX(buffer,onProgress){
-  const bytes=new Uint8Array(buffer);
-  onProgress(10,'Распаковываю файл...');
-  const zip=await unzip(bytes);
-  onProgress(25,'Читаю строки...');
-  let ss=[];
-  const ssXml=zip['xl/sharedStrings.xml'];
-  if(ssXml){
-    const txt=new TextDecoder().decode(ssXml);
-    for(const m of txt.matchAll(/<si>([\s\S]*?)<\/si>/g)){
-      const parts=[...m[1].matchAll(/<t[^>]*>([^<]*)<\/t>/g)].map(p=>decXML(p[1]));
-      ss.push(parts.join(''));
-    }
-  }
-  onProgress(45,'Парсю ячейки...');
-  const sheetXml=zip['xl/worksheets/sheet1.xml'];
-  if(!sheetXml)return null;
-  const sheetTxt=new TextDecoder().decode(sheetXml);
+  const bytes=new Uint8Array(buffer);onProgress(10,'Распаковываю файл...');const zip=await unzip(bytes);onProgress(25,'Читаю строки...');
+  let ss=[];const ssXml=zip['xl/sharedStrings.xml'];
+  if(ssXml){const txt=new TextDecoder().decode(ssXml);for(const m of txt.matchAll(/<si>([\s\S]*?)<\/si>/g)){const parts=[...m[1].matchAll(/<t[^>]*>([^<]*)<\/t>/g)].map(p=>decXML(p[1]));ss.push(parts.join(''));}}
+  onProgress(45,'Парсю ячейки...');const sheetXml=zip['xl/worksheets/sheet1.xml'];if(!sheetXml)return null;const sheetTxt=new TextDecoder().decode(sheetXml);
   const rows=[];
   for(const rm of sheetTxt.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)){
-    const cells={};
-    for(const cm of rm[1].matchAll(/<c\s+r="([A-Z]+)\d+"([^>]*)>([\s\S]*?)<\/c>/g)){
-      const col=colIdx(cm[1]);
-      const tM=cm[2].match(/t="([^"]*)"/);const cellType=tM?tM[1]:'';
-      const vM=cm[3].match(/<v>([^<]*)<\/v>/);let val=vM?vM[1]:'';
-      if(cellType==='s'){val=ss[parseInt(val)]||'';}
-      else if(val){try{val=String(parseInt(parseFloat(val)))||val;}catch(e){}}
-      cells[col]=val;
-    }
-    const keys=Object.keys(cells).map(Number);
-    if(keys.length){const mx=Math.max(...keys);const arr=[];for(let i=0;i<=mx;i++)arr.push(cells[i]||'');rows.push(arr);}
+    const cells={};for(const cm of rm[1].matchAll(/<c\s+r="([A-Z]+)\d+"([^>]*)>([\s\S]*?)<\/c>/g)){const col=colIdx(cm[1]);const tM=cm[2].match(/t="([^"]*)"/);const cellType=tM?tM[1]:'';const vM=cm[3].match(/<v>([^<]*)<\/v>/);let val=vM?vM[1]:'';if(cellType==='s'){val=ss[parseInt(val)]||'';}else if(val){try{val=String(parseInt(parseFloat(val)))||val;}catch(e){}}cells[col]=val;}
+    const keys=Object.keys(cells).map(Number);if(keys.length){const mx=Math.max(...keys);const arr=[];for(let i=0;i<=mx;i++)arr.push(cells[i]||'');rows.push(arr);}
   }
-  onProgress(80,'Обрабатываю каналы...');
-  return rows;
+  onProgress(80,'Обрабатываю каналы...');return rows;
 }
 
-function parseCSV(text){
-  return text.split(/\r?\n/).map(line=>{
-    const res=[];let cur='',inQ=false;
-    for(const ch of line){if(ch==='"'){inQ=!inQ}else if(ch===','&&!inQ){res.push(cur.trim());cur=''}else{cur+=ch}}
-    res.push(cur.trim());return res;
-  }).filter(r=>r.some(c=>c));
-}
+function parseCSV(text){return text.split(/\r?\n/).map(line=>{const res=[];let cur='',inQ=false;for(const ch of line){if(ch==='"'){inQ=!inQ}else if(ch===','&&!inQ){res.push(cur.trim());cur=''}else{cur+=ch}}res.push(cur.trim());return res;}).filter(r=>r.some(c=>c));}
 
 function detectCols(rows){
   const map={};
-  for(let i=0;i<Math.min(5,rows.length);i++){
-    const r=rows[i].map(c=>String(c).toLowerCase().trim());
-    if(r.some(c=>c.includes('ссылк')||c.includes('link')||c.includes('url')||c.includes('t.me'))){
-      r.forEach((cell,idx)=>{
-        if(cell.includes('назван')||cell.includes('name')||cell.includes('title'))map.n=idx;
-        if(cell.includes('ссылк')||cell.includes('link')||cell.includes('url'))map.u=idx;
-        if(cell.includes('участник')||cell.includes('подпис')||cell.includes('subscriber')||cell.includes('member'))map.s=idx;
-        if(cell.includes('коммент')||cell.includes('comment'))map.c=idx;
-      });
-      return{headerRow:i,map};
-    }
-  }
-  const sample=rows.slice(0,8);
-  sample.forEach(row=>row.forEach((val,idx)=>{const v=String(val);if(v.includes('t.me')||v.includes('telegram.me'))map.u=idx;if(/^\d{4,}$/.test(v.replace(/[\s,]/g,'')))map.s=idx}));
-  if(map.u!==undefined&&map.n===undefined)map.n=map.u===0?1:0;
-  return{headerRow:0,map};
+  for(let i=0;i<Math.min(5,rows.length);i++){const r=rows[i].map(c=>String(c).toLowerCase().trim());if(r.some(c=>c.includes('ссылк')||c.includes('link')||c.includes('url')||c.includes('t.me'))){r.forEach((cell,idx)=>{if(cell.includes('назван')||cell.includes('name')||cell.includes('title'))map.n=idx;if(cell.includes('ссылк')||cell.includes('link')||cell.includes('url'))map.u=idx;if(cell.includes('участник')||cell.includes('подпис')||cell.includes('subscriber')||cell.includes('member'))map.s=idx;if(cell.includes('коммент')||cell.includes('comment'))map.c=idx;});return{headerRow:i,map};}}
+  const sample=rows.slice(0,8);sample.forEach(row=>row.forEach((val,idx)=>{const v=String(val);if(v.includes('t.me')||v.includes('telegram.me'))map.u=idx;if(/^\d{4,}$/.test(v.replace(/[\s,]/g,'')))map.s=idx}));if(map.u!==undefined&&map.n===undefined)map.n=map.u===0?1:0;return{headerRow:0,map};
 }
 
 function rowsToChannels(rows,sourceName){
-  const{headerRow,map}=detectCols(rows);
-  const data=rows.slice(headerRow+1);
-  const existingKeys=new Set(allChannels.map(c=>ukey(c.u)));
-  const rejectedKeys=new Set(Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>k));
+  const{headerRow,map}=detectCols(rows);const data=rows.slice(headerRow+1);
+  const existingKeys=new Set(allChannels.map(c=>ukey(c.u)));const rejectedKeys=new Set(Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>k));
   const newOnes=[],dups=[],allParsed=[];
-  for(const r of data){
-    const u=map.u!==undefined?String(r[map.u]||'').trim():'';
-    if(!u||!u.includes('.'))continue;
-    const n=map.n!==undefined?String(r[map.n]||'').trim():'';
-    const s=map.s!==undefined?parseInt(String(r[map.s]||'').replace(/[^\d]/g,''))||0:0;
-    const c=map.c!==undefined?String(r[map.c]||''):'';
-    const ch={n:n||u,u,s,c,src:sourceName,addedAt:Date.now()};
-    allParsed.push(ch);
-    const k=ukey(u);
-    if(rejectedKeys.has(k)){dups.push({...ch,_rej:true});}
-    else if(existingKeys.has(k)){dups.push(ch);}
-    else{newOnes.push(ch);}
-  }
+  for(const r of data){const u=map.u!==undefined?String(r[map.u]||'').trim():'';if(!u||!u.includes('.'))continue;const n=map.n!==undefined?String(r[map.n]||'').trim():'';const s=map.s!==undefined?parseInt(String(r[map.s]||'').replace(/[^\d]/g,''))||0:0;const c=map.c!==undefined?String(r[map.c]||''):'';const ch={n:n||u,u,s,c,src:sourceName,addedAt:Date.now()};allParsed.push(ch);const k=ukey(u);if(rejectedKeys.has(k)){dups.push({...ch,_rej:true});}else if(existingKeys.has(k)){dups.push(ch);}else{newOnes.push(ch);}}
   return{allParsed,newOnes,dups};
 }
 
 async function handleFile(e){
-  const file=e.target.files[0];if(!file)return;
-  const fp=document.getElementById('FP');fp.style.display='block';setProgress(5,'Читаю файл...');
-  try{
-    const buf=await file.arrayBuffer();let rows=null;
-    if(file.name.toLowerCase().endsWith('.csv')){rows=parseCSV(new TextDecoder('utf-8').decode(buf));setProgress(70,'Обрабатываю...');}
-    else{rows=await parseXLSX(buf,setProgress);}
-    if(!rows||rows.length<2){setProgress(100,'❌ Не удалось прочитать файл');return}
-    setProgress(90,'Проверяю дубликаты...');
-    const{allParsed,newOnes,dups}=rowsToChannels(rows,file.name);
-    setProgress(100,`Готово: ${allParsed.length} строк`);
-    if(!allParsed.length){setProgress(100,'❌ Каналы не найдены — нужен столбец со ссылками t.me');return}
-    setTimeout(()=>{fp.style.display='none'},1500);
-    showPreview(allParsed,newOnes,dups,file.name);
-  }catch(err){setProgress(100,'❌ Ошибка: '+err.message);console.error(err)}
-  e.target.value='';
+  const file=e.target.files[0];if(!file)return;const fp=document.getElementById('FP');fp.style.display='block';setProgress(5,'Читаю файл...');
+  try{const buf=await file.arrayBuffer();let rows=null;if(file.name.toLowerCase().endsWith('.csv')){rows=parseCSV(new TextDecoder('utf-8').decode(buf));setProgress(70,'Обрабатываю...');}else{rows=await parseXLSX(buf,setProgress);}
+    if(!rows||rows.length<2){setProgress(100,'❌ Не удалось прочитать файл');return}setProgress(90,'Проверяю дубликаты...');const{allParsed,newOnes,dups}=rowsToChannels(rows,file.name);setProgress(100,`Готово: ${allParsed.length} строк`);if(!allParsed.length){setProgress(100,'❌ Каналы не найдены — нужен столбец со ссылками t.me');return}setTimeout(()=>{fp.style.display='none'},1500);showPreview(allParsed,newOnes,dups,file.name);
+  }catch(err){setProgress(100,'❌ Ошибка: '+err.message);console.error(err)}e.target.value='';
 }
 
 async function importGS(){
-  const raw=document.getElementById('GU').value.trim();
-  if(!raw){toast('⚠️ Вставь ссылку');return}
-  const match=raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  if(!match){toast('❌ Не похоже на Google Sheets');return}
+  const raw=document.getElementById('GU').value.trim();if(!raw){toast('⚠️ Вставь ссылку');return}const match=raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);if(!match){toast('❌ Не похоже на Google Sheets');return}
   const gs=document.getElementById('GS');gs.style.display='block';gs.style.color='var(--muted)';gs.innerHTML='<span class="spin"></span> Загружаю...';
-  try{
-    const resp=await fetch(`https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`);
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const text=await resp.text();const rows=parseCSV(text);gs.style.display='none';
-    const{allParsed,newOnes,dups}=rowsToChannels(rows,'Google Sheets');
-    if(!allParsed.length){gs.style.display='block';gs.style.color='var(--red)';gs.textContent='❌ Каналы не найдены';return}
-    showPreview(allParsed,newOnes,dups,'Google Sheets');
-  }catch(err){gs.style.color='var(--red)';gs.textContent='❌ Ошибка. Таблица должна быть открыта для всех по ссылке.'}
+  try{const resp=await fetch(`https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`);if(!resp.ok)throw new Error('HTTP '+resp.status);const text=await resp.text();const rows=parseCSV(text);gs.style.display='none';const{allParsed,newOnes,dups}=rowsToChannels(rows,'Google Sheets');if(!allParsed.length){gs.style.display='block';gs.style.color='var(--red)';gs.textContent='❌ Каналы не найдены';return}showPreview(allParsed,newOnes,dups,'Google Sheets');}catch(err){gs.style.color='var(--red)';gs.textContent='❌ Ошибка. Таблица должна быть открыта для всех по ссылке.'}
 }
 
 function showPreview(all,newOnes,dups,name){
-  pending=newOnes;
-  const rejSkipped=dups.filter(d=>d._rej).length;
-  document.getElementById('PMT').textContent='Импорт: '+name;
-  document.getElementById('PSUM').innerHTML=`
-    <div><div class="isn" style="color:var(--accent)">${all.length}</div><div class="isl">Всего</div></div>
-    <div><div class="isn" style="color:var(--green)">${newOnes.length}</div><div class="isl">Новых</div></div>
-    <div><div class="isn" style="color:var(--red)">${dups.length-rejSkipped}</div><div class="isl">Дублей</div></div>
-    <div><div class="isn" style="color:var(--muted)">${rejSkipped}</div><div class="isl">Отказы</div></div>`;
-  const ex=new Set(allChannels.map(c=>ukey(c.u)));
-  const rejK=new Set(Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>k));
-  document.getElementById('PTBL').innerHTML=
-    '<thead><tr><th>Канал</th><th>Ссылка</th><th>Подп.</th><th></th></tr></thead><tbody>'+
-    all.slice(0,20).map(ch=>{
-      const k=ukey(ch.u);const isRej=rejK.has(k);const isDup=!isRej&&ex.has(k);
-      return`<tr class="${isDup||isRej?'dup':''}"><td>${(ch.n||'').substring(0,18)}</td><td>${(ch.u||'').replace('https://t.me/','@').substring(0,18)}</td><td>${fmtS(ch.s)}</td><td>${isRej?'<span class="db2">отказ</span>':isDup?'<span class="db2">дубль</span>':'<span class="nb">новый</span>'}</td></tr>`
-    }).join('')+'</tbody>';
-  const btn=document.getElementById('CIB');btn.textContent=`✅ Добавить ${newOnes.length} каналов`;btn.disabled=newOnes.length===0;
-  om('PM');
+  pending=newOnes;const rejSkipped=dups.filter(d=>d._rej).length;document.getElementById('PMT').textContent='Импорт: '+name;
+  document.getElementById('PSUM').innerHTML=`<div><div class="isn" style="color:var(--accent)">${all.length}</div><div class="isl">Всего</div></div><div><div class="isn" style="color:var(--green)">${newOnes.length}</div><div class="isl">Новых</div></div><div><div class="isn" style="color:var(--red)">${dups.length-rejSkipped}</div><div class="isl">Дублей</div></div><div><div class="isn" style="color:var(--muted)">${rejSkipped}</div><div class="isl">Отказы</div></div>`;
+  const ex=new Set(allChannels.map(c=>ukey(c.u)));const rejK=new Set(Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>k));
+  document.getElementById('PTBL').innerHTML='<thead><tr><th>Канал</th><th>Ссылка</th><th>Подп.</th><th></th></tr></thead><tbody>'+all.slice(0,20).map(ch=>{const k=ukey(ch.u);const isRej=rejK.has(k);const isDup=!isRej&&ex.has(k);return`<tr class="${isDup||isRej?'dup':''}"><td>${(ch.n||'').substring(0,18)}</td><td>${(ch.u||'').replace('https://t.me/','@').substring(0,18)}</td><td>${fmtS(ch.s)}</td><td>${isRej?'<span class="db2">отказ</span>':isDup?'<span class="db2">дубль</span>':'<span class="nb">новый</span>'}</td></tr>`}).join('')+'</tbody>';
+  const btn=document.getElementById('CIB');btn.textContent=`✅ Добавить ${newOnes.length} каналов`;btn.disabled=newOnes.length===0;om('PM');
 }
 
 async function doImport(){
-  if(!pending.length)return;
-  const btn=document.getElementById('CIB');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Сохраняю...';
-  const CHUNK=500;
-  for(let i=0;i<pending.length;i+=CHUNK){
-    await dbPutMany('channels',pending.slice(i,i+CHUNK));
-    btn.textContent=`Сохранено ${Math.min(i+CHUNK,pending.length)} из ${pending.length}...`;
-    await new Promise(r=>setTimeout(r,10));
-  }
+  if(!pending.length)return;const btn=document.getElementById('CIB');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Сохраняю...';const CHUNK=500;
+  for(let i=0;i<pending.length;i+=CHUNK){await dbPutMany('channels',pending.slice(i,i+CHUNK));btn.textContent=`Сохранено ${Math.min(i+CHUNK,pending.length)} из ${pending.length}...`;await new Promise(r=>setTimeout(r,10));}
   allChannels.push(...pending);cm('PM');rc();rDBS();toast(`✅ Добавлено ${pending.length} каналов`);pending=[];
 }
 
 function rDBS(){
-  const t=allChannels.length;const m=allChannels.filter(c=>c.src==='вручную').length;
-  const f=allChannels.filter(c=>c.src&&c.src!=='вручную'&&c.src!=='builtin').length;
-  const rj=Object.values(ST.cs).filter(v=>v==='rejected').length;
-  document.getElementById('DBS').innerHTML=[
-    ['📊','Всего каналов',t,'var(--accent)'],['✏️','Вручную',m,'var(--muted)'],
-    ['📂','Из файлов',f,'var(--accent2)'],['🚫','Отказались',rj,'var(--red)']
-  ].map(([i,l,v,c])=>`<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:18px;margin-bottom:4px">${i}</div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${c}">${v}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${l}</div></div>`).join('');
+  const t=allChannels.length;const m=allChannels.filter(c=>c.src==='вручную').length;const f=allChannels.filter(c=>c.src&&c.src!=='вручную'&&c.src!=='builtin').length;const rj=Object.values(ST.cs).filter(v=>v==='rejected').length;
+  document.getElementById('DBS').innerHTML=[['📊','Всего каналов',t,'var(--accent)'],['✏️','Вручную',m,'var(--muted)'],['📂','Из файлов',f,'var(--accent2)'],['🚫','Отказались',rj,'var(--red)']].map(([i,l,v,c])=>`<div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:18px;margin-bottom:4px">${i}</div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${c}">${v}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${l}</div></div>`).join('');
   document.getElementById('CCN').textContent=t;
 }
 function askClear(){om('CCM')}
