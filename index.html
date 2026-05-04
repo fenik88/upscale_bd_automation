@@ -10,10 +10,20 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif}
 #app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto}
-.topbar{padding:16px 20px 12px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.topbar h1{font-family:"Syne",sans-serif;font-size:18px;font-weight:800;letter-spacing:-.5px}
+.topbar{padding:12px 16px 10px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
+.topbar h1{font-family:"Syne",sans-serif;font-size:18px;font-weight:800;letter-spacing:-.5px;flex-shrink:0}
 .topbar h1 span{color:var(--accent)}
-.badge{background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.cloud-btns{display:flex;gap:6px;align-items:center}
+.cloud-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;font-family:"DM Sans",sans-serif;transition:all .2s}
+.cloud-btn:active{transform:scale(.95)}
+.cloud-btn.save{border-color:rgba(124,92,252,.4);color:var(--accent)}
+.cloud-btn.load{border-color:rgba(0,229,176,.4);color:var(--accent2)}
+.cloud-btn.syncing{opacity:.6;pointer-events:none}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.sync-dot.ok{background:var(--green)}
+.sync-dot.err{background:var(--red)}
+.sync-dot.pulse{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .nav-tabs{display:flex;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
 .tab-btn{flex:1;padding:10px 4px 8px;background:none;border:none;color:var(--muted);font-family:"DM Sans",sans-serif;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s}
@@ -123,11 +133,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .ph p{font-size:13px;color:var(--muted);margin-top:3px}
 .rj-hdr{font-family:"Syne",sans-serif;font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding:12px 16px 0;display:flex;align-items:center;gap:6px}
 .rj-sub{font-size:11px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+.cloud-info{margin:0 16px 14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+.cloud-info-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0}
+.cloud-info-label{color:var(--muted)}
+.cloud-info-val{font-weight:500;font-size:12px}
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="topbar"><h1>Up<span>Scale</span> BD</h1><span class="badge" id="D"></span></div>
+  <div class="topbar">
+    <h1>Up<span>Scale</span> BD</h1>
+    <div class="cloud-btns">
+      <div class="sync-dot" id="syncDot" title="Статус облака"></div>
+      <button class="cloud-btn save" onclick="cloudSave()">☁️ Сохранить</button>
+      <button class="cloud-btn load" onclick="cloudLoad()">📥 Загрузить</button>
+    </div>
+  </div>
   <div class="content">
 
     <!-- DASHBOARD -->
@@ -163,7 +184,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
         <div class="frow">
           <button class="fb" id="fNC" onclick="tf('notcontacted')" style="flex:2">📭 Не писали</button>
           <button class="fb" id="fWC" onclick="tf('wascontacted')" style="flex:2">📩 Писали</button>
-          <button class="fb red-fb" id="fRJ" onclick="tf('showrejected')" style="flex:1" title="Показать отказавшихся">🚫</button>
+          <button class="fb red-fb" id="fRJ" onclick="tf('showrejected')" style="flex:1">🚫</button>
         </div>
       </div>
       <div class="dbc" id="DBC"></div>
@@ -173,6 +194,20 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
     <!-- ИМПОРТ -->
     <div class="page" id="page-import">
       <div class="ph"><h2>База каналов</h2><p>Импорт и управление</p></div>
+
+      <!-- CLOUD INFO -->
+      <div class="cloud-info">
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">☁️ Облачное хранилище</div>
+        <div class="cloud-info-row"><span class="cloud-info-label">Последнее сохранение</span><span class="cloud-info-val" id="lastSaveTime">—</span></div>
+        <div class="cloud-info-row"><span class="cloud-info-label">Каналов в облаке</span><span class="cloud-info-val" id="cloudChCount">—</span></div>
+        <div class="cloud-info-row"><span class="cloud-info-label">Статусов в облаке</span><span class="cloud-info-val" id="cloudStCount">—</span></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-p" style="flex:1" onclick="cloudSave()">☁️ Сохранить всё</button>
+          <button class="btn btn-s" style="flex:1" onclick="cloudLoad()">📥 Загрузить</button>
+        </div>
+        <div id="cloudStatus" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;display:none"></div>
+      </div>
+
       <div class="isec">
         <div class="isec-h"><div class="isec-ico" style="background:rgba(34,197,94,.15)">📊</div>
           <div><div class="isec-t">Загрузить Excel (.xlsx)</div><div class="isec-s">Любой размер — хоть 100 000 строк</div></div></div>
@@ -322,7 +357,136 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   </div>
 </div></div>
 
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAii9wrHdQpbyNOZ8crJ8gU58H53HWb8as",
+  authDomain: "upscale-bd.firebaseapp.com",
+  projectId: "upscale-bd",
+  storageBucket: "upscale-bd.firebasestorage.app",
+  messagingSenderId: "1020951500539",
+  appId: "1:1020951500539:web:4796afcae233fc4386025e"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const fsdb = getFirestore(fbApp);
+
+// ─── CLOUD SAVE ───
+window.cloudSave = async function() {
+  setSyncStatus('pulse');
+  setCloudStatus('<span class="spin"></span> Сохраняю в облако...');
+  try {
+    const meta = JSON.parse(localStorage.getItem('bdmeta') || '{}');
+    const savedAt = new Date().toISOString();
+
+    // 1. Save meta (statuses, notes, stats) — one document
+    await setDoc(doc(fsdb, 'upscale', 'meta'), {
+      cs: meta.cs || {},
+      cn: meta.cn || {},
+      stats: meta.stats || {},
+      savedAt
+    });
+
+    // 2. Save channels in batches of 400 (Firestore limit = 500 per batch)
+    const CHUNK = 400;
+    let total = 0;
+    for (let i = 0; i < allChannels.length; i += CHUNK) {
+      const batch = writeBatch(fsdb);
+      const slice = allChannels.slice(i, i + CHUNK);
+      slice.forEach(ch => {
+        const key = ukey(ch.u).replace(/[^a-z0-9_\-]/g, '_').substring(0, 100);
+        batch.set(doc(fsdb, 'channels', key || `ch_${i}_${total}`), ch);
+      });
+      await batch.commit();
+      total += slice.length;
+      setCloudStatus(`Сохранено ${total} из ${allChannels.length} каналов...`);
+    }
+
+    // Update cloud info display
+    localStorage.setItem('lastCloudSave', savedAt);
+    updateCloudInfo(savedAt, allChannels.length, Object.keys(meta.cs || {}).length);
+    setSyncStatus('ok');
+    setCloudStatus('');
+    toast('☁️ Сохранено в облако!');
+  } catch(err) {
+    console.error(err);
+    setSyncStatus('err');
+    setCloudStatus('❌ Ошибка: ' + err.message);
+    toast('❌ Ошибка сохранения');
+  }
+};
+
+// ─── CLOUD LOAD ───
+window.cloudLoad = async function() {
+  setSyncStatus('pulse');
+  setCloudStatus('<span class="spin"></span> Загружаю из облака...');
+  try {
+    // 1. Load meta
+    const metaSnap = await getDoc(doc(fsdb, 'upscale', 'meta'));
+    if (!metaSnap.exists()) {
+      setSyncStatus('err');
+      setCloudStatus('❌ В облаке нет данных — сначала сохрани');
+      toast('❌ В облаке пусто');
+      return;
+    }
+    const cloudMeta = metaSnap.data();
+
+    // 2. Load channels
+    setCloudStatus('<span class="spin"></span> Загружаю каналы...');
+    const chSnap = await getDocs(collection(fsdb, 'channels'));
+    const cloudChannels = [];
+    chSnap.forEach(d => cloudChannels.push(d.data()));
+
+    // 3. Save to IndexedDB
+    await dbClear('channels');
+    const CHUNK = 500;
+    for (let i = 0; i < cloudChannels.length; i += CHUNK) {
+      await dbPutMany('channels', cloudChannels.slice(i, i + CHUNK));
+      setCloudStatus(`Загружено ${Math.min(i+CHUNK, cloudChannels.length)} из ${cloudChannels.length}...`);
+    }
+    allChannels = cloudChannels;
+
+    // 4. Restore meta
+    const newMeta = { cs: cloudMeta.cs || {}, cn: cloudMeta.cn || {}, stats: cloudMeta.stats || {} };
+    localStorage.setItem('bdmeta', JSON.stringify(newMeta));
+    ST.cs = newMeta.cs; ST.cn = newMeta.cn; ST.stats = newMeta.stats;
+
+    updateCloudInfo(cloudMeta.savedAt, cloudChannels.length, Object.keys(cloudMeta.cs || {}).length);
+    setSyncStatus('ok');
+    setCloudStatus('');
+    rc(); rCRM(); rDBS(); updDash();
+    toast(`📥 Загружено: ${cloudChannels.length} каналов`);
+  } catch(err) {
+    console.error(err);
+    setSyncStatus('err');
+    setCloudStatus('❌ Ошибка: ' + err.message);
+    toast('❌ Ошибка загрузки');
+  }
+};
+
+window.updateCloudInfo = function(savedAt, chCount, stCount) {
+  if (savedAt) {
+    const d = new Date(savedAt);
+    document.getElementById('lastSaveTime').textContent =
+      d.toLocaleDateString('ru') + ' ' + d.toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
+  }
+  if (chCount !== undefined) document.getElementById('cloudChCount').textContent = chCount;
+  if (stCount !== undefined) document.getElementById('cloudStCount').textContent = stCount;
+};
+
+// Restore last save time from localStorage on load
+window.addEventListener('DOMContentLoaded', () => {
+  const last = localStorage.getItem('lastCloudSave');
+  if (last) updateCloudInfo(last);
+});
+
+</script>
+
 <script>
+// ═══ INDEXEDDB ═══
 const DB_NAME='upscalebd',DB_VER=1;
 let db=null;
 function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('channels'))d.createObjectStore('channels',{keyPath:'u'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=rej})}
@@ -330,6 +494,7 @@ function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(
 function dbPutMany(store,items){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const os=tx.objectStore(store);let i=0;function next(){if(i>=items.length){res();return}const r=os.put(items[i++]);r.onsuccess=next;r.onerror=rej}next()})}
 function dbClear(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const r=tx.objectStore(store).clear();r.onsuccess=res;r.onerror=rej})}
 
+// ═══ STATE ═══
 let ST=JSON.parse(localStorage.getItem('bdmeta')||'{}');
 if(!ST.cs)ST.cs={};
 if(!ST.cn)ST.cn={};
@@ -339,6 +504,7 @@ function saveMeta(){localStorage.setItem('bdmeta',JSON.stringify(ST))}
 let allChannels=[],viewChannels=[],CK=null,pending=[];
 let FS={size:false,open:false,new:false,notcontacted:false,wascontacted:false,showrejected:false};
 
+// ═══ UTILS ═══
 function ukey(u){return(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^t\.me\//,'').replace(/^telegram\.me\//,'').replace(/\/+$/,'')}
 function fmtS(n){n=parseInt(n)||0;return n>=1e6?(n/1e6).toFixed(1)+'М':n>=1000?Math.round(n/1000)+'к':n||'—'}
 function chal(s){s=parseInt(s)||0;return s>=500000?'50k ⚠️':s>=200000?'25k':s>=50000?'10k':'5k'}
@@ -349,14 +515,16 @@ function om(id){document.getElementById(id).classList.add('open')}
 function cp(t){if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('📋 Скопировано!'))}else{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('📋 Скопировано!')}}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2700)}
 function setProgress(pct,txt){document.getElementById('PB').style.width=pct+'%';document.getElementById('PT2').textContent=txt}
+function setSyncStatus(s){const d=document.getElementById('syncDot');d.className='sync-dot'+(s?' '+s:'')}
+function setCloudStatus(html){const el=document.getElementById('cloudStatus');if(el){el.style.display=html?'block':'none';el.innerHTML=html}}
 
+// ═══ INIT ═══
 window.addEventListener('DOMContentLoaded',async()=>{
   await openDB();
   allChannels=await dbGetAll('channels');
   const now=new Date();
   const days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
   const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-  document.getElementById('D').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
   document.getElementById('DD').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
   updDash();rc();rCRM();rDBS();
   ['CM','PM','CCM'].forEach(id=>document.getElementById(id).addEventListener('click',function(e){if(e.target===this)cm(id)}));
@@ -369,6 +537,7 @@ function sw(tab,btn){
   if(tab==='dash')updDash();if(tab==='crm')rCRM();if(tab==='import')rDBS();if(tab==='outreach')rc();
 }
 
+// ═══ DASHBOARD ═══
 function updDash(){const s=es();document.getElementById('sO').textContent=s.outreach;document.getElementById('sN').textContent=s.onboard;document.getElementById('sA').textContent=s.active;document.getElementById('RP').textContent=`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`}
 function copyReport(){const s=es();cp(`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`)}
 const TMPL={
@@ -378,6 +547,7 @@ const TMPL={
 };
 function copyT(t){cp(TMPL[t])}
 
+// ═══ CHANNELS ═══
 let renderLimit=50;
 function rc(){
   let chs=[...allChannels];
@@ -394,13 +564,13 @@ function rc(){
     if(FS.wascontacted)chs=chs.filter(c=>['contacted','onboarding','active'].includes(ST.cs[ukey(c.u)]||'none'));
   }
   viewChannels=chs;renderLimit=50;
-  document.getElementById('DBC').textContent=`Показано: ${Math.min(renderLimit,chs.length)} из ${chs.length} (всего в базе: ${allChannels.length})`;
+  document.getElementById('DBC').textContent=`Показано: ${Math.min(renderLimit,chs.length)} из ${chs.length} (всего: ${allChannels.length})`;
   renderList();
 }
 function renderList(){
   const chs=viewChannels.slice(0,renderLimit);
   const list=document.getElementById('CL');
-  if(!chs.length){list.innerHTML=allChannels.length===0?'<div class="empty">База пуста 📭<br><br>Перейди во вкладку <strong>Импорт</strong></div>':'<div class="empty">Ничего не найдено 🔍</div>';return}
+  if(!chs.length){list.innerHTML=allChannels.length===0?'<div class="empty">База пуста 📭<br><br>Загрузи файл во вкладке <strong>Импорт</strong><br>или нажми 📥 Загрузить если уже сохранял в облако</div>':'<div class="empty">Ничего не найдено 🔍</div>';return}
   list.innerHTML=chs.map(ch=>{
     const k=ukey(ch.u);const st=ST.cs[k]||'none';
     const s=parseInt(ch.s)||0;
@@ -431,6 +601,7 @@ function tf(t){
   rc();
 }
 
+// ═══ CHANNEL MODAL ═══
 function oCh(k){
   CK=k;const ch=allChannels.find(c=>ukey(c.u)===k);if(!ch)return;
   const st=ST.cs[k]||'none';
@@ -448,15 +619,8 @@ function oCh(k){
     iframe.style.cssText='position:fixed;opacity:0;width:1px;height:1px;border:none';
     document.body.appendChild(iframe);
     iframe.src='tg://resolve?domain='+domain;
-    const fallback=setTimeout(()=>{
-      try{document.body.removeChild(iframe)}catch(e){}
-      window.open(ch.u,'_blank');
-    },800);
-    window.addEventListener('blur',function onBlur(){
-      clearTimeout(fallback);
-      try{document.body.removeChild(iframe)}catch(e){}
-      window.removeEventListener('blur',onBlur);
-    });
+    const fallback=setTimeout(()=>{try{document.body.removeChild(iframe)}catch(e){}window.open(ch.u,'_blank')},800);
+    window.addEventListener('blur',function onBlur(){clearTimeout(fallback);try{document.body.removeChild(iframe)}catch(e){}window.removeEventListener('blur',onBlur)});
   };
   om('CM');
 }
@@ -467,6 +631,7 @@ function setSt(el,st){
 }
 function saveCh(){if(CK){ST.cn[CK]=document.getElementById('CN').value;saveMeta()}cm('CM');rc();toast('✅ Сохранено')}
 
+// ═══ CRM ═══
 function rCRM(){
   const lb={contacted:'Написали',onboarding:'Онбординг',active:'Актив'};
   const cl={contacted:'var(--yellow)',onboarding:'var(--accent)',active:'var(--green)'};
@@ -483,15 +648,14 @@ function rCRM(){
   const RL=document.getElementById('RJLIST');
   if(!rjEntries.length){RL.innerHTML='<div style="font-size:13px;color:var(--muted);padding:4px 0 8px">Список пуст</div>';return}
   RL.innerHTML=rjEntries.map(({k,ch})=>`<div class="cc" style="border-left:3px solid var(--red);margin-bottom:8px">
-    <div class="cr1">
-      <div class="cn" style="font-size:13px">${ch.n||ch.u}</div>
-      <button onclick="unReject('${k}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Вернуть</button>
-    </div>
+    <div class="cr1"><div class="cn" style="font-size:13px">${ch.n||ch.u}</div>
+      <button onclick="unReject('${k}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Вернуть</button></div>
     <div class="cr2"><span class="cl">${(ch.u||'').replace('https://t.me/','@')}</span><span style="font-size:11px;color:var(--muted)">${fmtS(ch.s)} подп.</span></div>
   </div>`).join('');
 }
 function unReject(k){ST.cs[k]='none';saveMeta();rCRM();rc();toast('↩️ Возвращён в базу')}
 
+// ═══ MANUAL ADD ═══
 function valM(){const v=document.getElementById('MU').value.trim();const e2=document.getElementById('ME');const b=document.getElementById('MAB');if(!v){e2.style.display='none';b.disabled=true;return}const ok=v.includes('t.me')||v.includes('telegram')||v.startsWith('@')||v.startsWith('http');e2.style.display=ok?'none':'block';e2.textContent='Введи ссылку вида https://t.me/channel или @channel';b.disabled=!ok}
 async function addManual(){
   let u=document.getElementById('MU').value.trim();
@@ -504,6 +668,7 @@ async function addManual(){
   document.getElementById('MU').value='';document.getElementById('MAB').disabled=true;toast('✅ Канал добавлен');
 }
 
+// ═══ XLSX PARSER ═══
 function colIdx(letters){let n=0;for(const c of letters)n=n*26+(c.charCodeAt(0)-64);return n-1}
 function decXML(s){return(s||'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'")}
 
@@ -515,17 +680,13 @@ async function unzip(bytes){
     if(bytes[i]===0x50&&bytes[i+1]===0x4B&&bytes[i+2]===0x05&&bytes[i+3]===0x06){eocd=i;break}
   }
   if(eocd<0)return files;
-  const cdOffset=dv.getUint32(eocd+16,true);
-  const cdSize=dv.getUint32(eocd+12,true);
+  const cdOffset=dv.getUint32(eocd+16,true);const cdSize=dv.getUint32(eocd+12,true);
   const entries=[];let ci=cdOffset;
   while(ci<cdOffset+cdSize&&ci+46<=bytes.length){
     if(bytes[ci]!==0x50||bytes[ci+1]!==0x4B||bytes[ci+2]!==0x01||bytes[ci+3]!==0x02)break;
-    const comp=dv.getUint16(ci+10,true);
-    const compSize=dv.getUint32(ci+20,true);
-    const fnLen=dv.getUint16(ci+28,true);
-    const extraLen=dv.getUint16(ci+30,true);
-    const commentLen=dv.getUint16(ci+32,true);
-    const localOffset=dv.getUint32(ci+42,true);
+    const comp=dv.getUint16(ci+10,true);const compSize=dv.getUint32(ci+20,true);
+    const fnLen=dv.getUint16(ci+28,true);const extraLen=dv.getUint16(ci+30,true);
+    const commentLen=dv.getUint16(ci+32,true);const localOffset=dv.getUint32(ci+42,true);
     const fname=new TextDecoder().decode(bytes.slice(ci+46,ci+46+fnLen));
     entries.push({fname,comp,compSize,localOffset});
     ci+=46+fnLen+extraLen+commentLen;
@@ -533,8 +694,7 @@ async function unzip(bytes){
   for(const e of entries){
     if(e.compSize===0)continue;
     const li=e.localOffset;
-    const fnLen2=dv.getUint16(li+26,true);
-    const extraLen2=dv.getUint16(li+28,true);
+    const fnLen2=dv.getUint16(li+26,true);const extraLen2=dv.getUint16(li+28,true);
     const dataStart=li+30+fnLen2+extraLen2;
     const compData=bytes.slice(dataStart,dataStart+e.compSize);
     if(e.comp===8){
