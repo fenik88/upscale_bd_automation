@@ -379,8 +379,8 @@ function sw(tab,btn){
 function updDash(){const s=es();document.getElementById('sO').textContent=s.outreach;document.getElementById('sN').textContent=s.onboard;document.getElementById('sA').textContent=s.active;document.getElementById('RP').textContent=`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`}
 function copyReport(){const s=es();cp(`Аутрич: ${s.outreach}\nОнбординг: ${s.onboard}\nАктив: ${s.active}`)}
 const TMPL={
-  intro:`Привет! 👋\n\nМеня зовут [Имя], я BD менеджер команды UpScale.\n\nУ тебя отличный крипто-канал — хочу предложить сотрудничество с платформой Bookflow.\n\nПредлагаем:\n💰 Реф. процент 20-25%\n🎯 Стартовый челендж для аудитории\n\nРасскажу подробнее?`,
-  followup:`Привет, ещё раз! 👋\n\nПисал тебе пару дней назад насчёт сотрудничества с Bookflow.\n\nПросто хотел убедиться что сообщение дошло — было бы круто поговорить!`,
+  intro:`Привет! 👋\n\nМеня зовут Семен, я BD менеджер команды UpScale.\n\nУ тебя отличный крипто-канал – хочу предложить сотрудничество.\n\nПредлагаем:\nПерсональный аккаунт с проп-счетом\nРеф. процент с каждой покупки\nСтартовый челендж для аудитории\n\nРасскажу подробнее?`,
+  followup:`Привет, ещё раз! 👋\n\nПисал тебе пару дней назад насчёт сотрудничества с UpScale.\n\nПросто хотел убедиться что сообщение дошло – было бы круто поговорить!`,
   boss:`[ссылка на канал]\n[id в приложении]\n[размер челенджа]\n[реф процент]`
 };
 function copyT(t){cp(TMPL[t])}
