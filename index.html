@@ -592,10 +592,26 @@ function oCh(k){
   const ci=sm[st];if(ci!==undefined){const chip=chips[ci];const cc=chip.dataset.c;chip.classList.add(cc==='y'?'ay':cc==='g'?'ag':cc==='r'?'ar':'a')}
   document.getElementById('CN').value=ST.cn[k]||'';
   document.getElementById('OTG').onclick=(e)=>{
-    e.preventDefault();const domain=(ch.u.replace(/^https?:\/\/t\.me\//,'')).toLowerCase().split('/')[0];
-    const iframe=document.createElement('iframe');iframe.style.cssText='position:fixed;opacity:0;width:1px;height:1px;border:none';document.body.appendChild(iframe);iframe.src='tg://resolve?domain='+domain;
-    const fallback=setTimeout(()=>{try{document.body.removeChild(iframe)}catch(e){}window.open(ch.u,'_blank')},800);
-    window.addEventListener('blur',function onBlur(){clearTimeout(fallback);try{document.body.removeChild(iframe)}catch(e){}window.removeEventListener('blur',onBlur)});
+    e.preventDefault();e.stopPropagation();
+    // Используем невидимый <a> с target=_blank — страница приложения НЕ уходит
+    const domain=(ch.u.replace(/^https?:\/\/t\.me\//,'')).toLowerCase().split('/')[0];
+    const a=document.createElement('a');
+    a.href='tg://resolve?domain='+domain;
+    a.target='_blank';a.rel='noopener noreferrer';
+    a.style.cssText='position:fixed;opacity:0;pointer-events:none';
+    document.body.appendChild(a);
+    try{a.click();}catch(err){}
+    // Fallback через 700ms — если Telegram не открылся, открываем браузерную версию в новой вкладке
+    setTimeout(()=>{
+      try{document.body.removeChild(a)}catch(err){}
+      // Проверяем что мы всё ещё на странице (не ушли)
+      if(document.getElementById('app')){
+        const a2=document.createElement('a');a2.href=ch.u;a2.target='_blank';a2.rel='noopener noreferrer';
+        a2.style.cssText='position:fixed;opacity:0;pointer-events:none';
+        document.body.appendChild(a2);try{a2.click();}catch(err){}
+        setTimeout(()=>{try{document.body.removeChild(a2)}catch(err){}},100);
+      }
+    },700);
   };
   om('CM');
 }
@@ -672,15 +688,48 @@ function parseCSV(text){return text.split(/\r?\n/).map(line=>{const res=[];let c
 
 function detectCols(rows){
   const map={};
-  for(let i=0;i<Math.min(5,rows.length);i++){const r=rows[i].map(c=>String(c).toLowerCase().trim());if(r.some(c=>c.includes('ссылк')||c.includes('link')||c.includes('url')||c.includes('t.me'))){r.forEach((cell,idx)=>{if(cell.includes('назван')||cell.includes('name')||cell.includes('title'))map.n=idx;if(cell.includes('ссылк')||cell.includes('link')||cell.includes('url'))map.u=idx;if(cell.includes('участник')||cell.includes('подпис')||cell.includes('subscriber')||cell.includes('member'))map.s=idx;if(cell.includes('коммент')||cell.includes('comment'))map.c=idx;});return{headerRow:i,map};}}
-  const sample=rows.slice(0,8);sample.forEach(row=>row.forEach((val,idx)=>{const v=String(val);if(v.includes('t.me')||v.includes('telegram.me'))map.u=idx;if(/^\d{4,}$/.test(v.replace(/[\s,]/g,'')))map.s=idx}));if(map.u!==undefined&&map.n===undefined)map.n=map.u===0?1:0;return{headerRow:0,map};
+  // Шаг 1: ищем строку-заголовок по ключевым словам
+  for(let i=0;i<Math.min(5,rows.length);i++){
+    const r=rows[i].map(c=>String(c).toLowerCase().trim());
+    const hasLinkCol=r.some(c=>c.includes('ссылк')||c.includes('link')||c.includes('url')||c==='media'||c.includes('t.me')||c.includes('telegram'));
+    if(hasLinkCol){
+      r.forEach((cell,idx)=>{
+        if(cell.includes('назван')||cell.includes('name')||cell.includes('title')||cell==='media')map.n=idx;
+        if(cell.includes('ссылк')||cell.includes('link')||cell.includes('url')||cell==='media')map.u=idx;
+        if(cell.includes('участник')||cell.includes('подпис')||cell.includes('subscriber')||cell.includes('member')||cell.includes('posts'))map.s=idx;
+        if(cell.includes('коммент')||cell.includes('comment')||cell==='comment')map.c=idx;
+        if(cell.includes('@')||cell.includes('username'))map.username=idx;
+      });
+      return{headerRow:i,map};
+    }
+  }
+  // Шаг 2: если заголовок не найден — ищем по содержимому ячеек
+  const sample=rows.slice(0,10);
+  sample.forEach(row=>row.forEach((val,idx)=>{
+    const v=String(val||'').trim();
+    if(v.startsWith('https://t.me/')||v.startsWith('http://t.me/')||v.includes('telegram.me/'))map.u=idx;
+    if(/^\d{4,}$/.test(v.replace(/[\s,]/g,'')))map.s=idx;
+  }));
+  if(map.u!==undefined&&map.n===undefined)map.n=map.u;
+  return{headerRow:0,map};
 }
 
 function rowsToChannels(rows,sourceName){
   const{headerRow,map}=detectCols(rows);const data=rows.slice(headerRow+1);
   const existingKeys=new Set(allChannels.map(c=>ukey(c.u)));const rejectedKeys=new Set(Object.entries(ST.cs).filter(([,v])=>v==='rejected').map(([k])=>k));
   const newOnes=[],dups=[],allParsed=[];
-  for(const r of data){const u=map.u!==undefined?String(r[map.u]||'').trim():'';if(!u||!u.includes('.'))continue;const n=map.n!==undefined?String(r[map.n]||'').trim():'';const s=map.s!==undefined?parseInt(String(r[map.s]||'').replace(/[^\d]/g,''))||0:0;const c=map.c!==undefined?String(r[map.c]||''):'';const ch={n:n||u,u,s,c,src:sourceName,addedAt:Date.now()};allParsed.push(ch);const k=ukey(u);if(rejectedKeys.has(k)){dups.push({...ch,_rej:true});}else if(existingKeys.has(k)){dups.push(ch);}else{newOnes.push(ch);}}
+  for(const r of data){
+    // Пробуем основной столбец ссылок
+    let u=map.u!==undefined?String(r[map.u]||'').trim():'';
+    // Если пусто или не t.me — пробуем столбец @username
+    if((!u||!u.includes('t.me'))&&map.username!==undefined){
+      const un=String(r[map.username]||'').trim();
+      if(un.startsWith('@'))u='https://t.me/'+un.slice(1);
+      else if(un&&!un.startsWith('http'))u='https://t.me/'+un;
+    }
+    // Нормализуем: если просто домен без http
+    if(u&&!u.startsWith('http')&&u.includes('t.me'))u='https://'+u;
+    if(!u||!u.includes('t.me'))continue;const n=map.n!==undefined?String(r[map.n]||'').trim():'';const s=map.s!==undefined?parseInt(String(r[map.s]||'').replace(/[^\d]/g,''))||0:0;const c=map.c!==undefined?String(r[map.c]||''):'';const ch={n:n||u,u,s,c,src:sourceName,addedAt:Date.now()};allParsed.push(ch);const k=ukey(u);if(rejectedKeys.has(k)){dups.push({...ch,_rej:true});}else if(existingKeys.has(k)){dups.push(ch);}else{newOnes.push(ch);}}
   return{allParsed,newOnes,dups};
 }
 
